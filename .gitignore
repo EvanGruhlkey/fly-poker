@@ -1,0 +1,16 @@
+.superpowers/
+docs/superpowers/
+.worktrees/
+.venv/
+node_modules/
+package-lock.json
+dist/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+*.npz
+*.pt
+*.pth
+runs/
+
