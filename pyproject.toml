@@ -5,6 +5,7 @@ requires-python = ">=3.12"
 dependencies = [
     "numpy==2.3.3",
     "pokerkit>=0.7.6",
+    "torch==2.8.0",
 ]
 
 [dependency-groups]
