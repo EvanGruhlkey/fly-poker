@@ -6,7 +6,7 @@ export function hudMarkup(view: TableView): string {
     .join("");
   const activity = view.activity;
   return `
-    <div class="scene" data-scene></div>
+    <div class="scene" data-scene data-phase="${view.phase}"></div>
     <header class="topbar">
       <div class="brand" aria-label="Poker vs. a Fruit Fly">Poker vs. a <span>Fruit Fly</span></div>
       <div class="science">166,700 neurons <i></i> 124M synapses <i></i> MaleCNS v1.0</div>
@@ -26,7 +26,7 @@ export function hudMarkup(view: TableView): string {
     </section>
     <section class="activity panel">
       <div class="panel-heading">
-        <div><div class="eyebrow">Live connectome</div><strong>150 ms decision</strong></div>
+        <div><div class="eyebrow">Live connectome</div><strong>${activity.simulationMs} ms decision</strong></div>
         <button class="collapse" data-collapse aria-label="Hide connectome panel">&minus;</button>
       </div>
       <div class="brain" aria-hidden="true">
