@@ -24,7 +24,7 @@ export function mountApp(root: HTMLElement): () => void {
   host?.remove();root.innerHTML=hudMarkup(state.table,state);
   const placeholder=root.querySelector<HTMLElement>('[data-scene]');
   if(!placeholder)throw new Error('Casino scene host is missing');
-  if(host)placeholder.replaceWith(host);
+  if(host){host.dataset.phase=state.table.phase;placeholder.replaceWith(host);}
   else{
    host=placeholder;
    try{scene=new CasinoScene(host,state.table,qualityForWidth(window.innerWidth));}
@@ -55,3 +55,4 @@ export function mountApp(root: HTMLElement): () => void {
  render();window.addEventListener('keydown',keyboard);
  return()=>{generation++;window.removeEventListener('keydown',keyboard);scene?.destroy();};
 }
+

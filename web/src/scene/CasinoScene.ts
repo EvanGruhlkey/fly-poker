@@ -35,7 +35,7 @@ export class CasinoScene {
   readonly #clock = new THREE.Clock();
   readonly #fly = new THREE.Group();
   readonly #wingPivots: THREE.Group[] = [];
-  readonly #wingSpeed: number;
+  #wingSpeed: number;
   readonly #resize = () => this.resize();
   readonly #observer = new ResizeObserver(this.#resize);
   #frame = 0;
@@ -66,8 +66,8 @@ export class CasinoScene {
     this.tick();
   }
 
-  update(view: TableView): void { this.#chips.update(view); }
-  animate(stages: readonly (readonly ChipTransfer[])[]): Promise<boolean> { return this.#chips.animate(stages); }
+  update(view: TableView): void { this.#wingSpeed = WING_SPEED_BY_PHASE[view.phase]; this.#chips.update(view); }
+  animate(stages: readonly (readonly ChipTransfer[])[]): Promise<boolean> { if(stages.length) this.#wingSpeed = WING_SPEED_BY_PHASE['fly-thinking']; return this.#chips.animate(stages); }
   cancelAnimation(): void { this.#chips.cancel(); }
   destroy(): void {
     cancelAnimationFrame(this.#frame);
@@ -310,6 +310,7 @@ export class CasinoScene {
     this.#frame = requestAnimationFrame(this.tick);
   };
 }
+
 
 
 
