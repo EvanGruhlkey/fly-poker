@@ -3,7 +3,8 @@ import { ChipStacks } from './ChipStacks';
 import type { ChipTransfer } from '../game/chips';
 
 
-import type { SceneQuality, TablePhase, TableView } from "../game/model";
+import type { SceneQuality, TablePhase } from "../game/model";
+import type { PokerTable } from '../ui/pokerView';
 
 
 const SCENE_COLORS = {
@@ -40,7 +41,7 @@ export class CasinoScene {
   readonly #observer = new ResizeObserver(this.#resize);
   #frame = 0;
 
-  constructor(host: HTMLElement, view: TableView, quality: SceneQuality) {
+  constructor(host: HTMLElement, view: PokerTable, quality: SceneQuality) {
     this.#host = host;
     this.#wingSpeed = WING_SPEED_BY_PHASE[view.phase];
     this.#renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -66,7 +67,7 @@ export class CasinoScene {
     this.tick();
   }
 
-  update(view: TableView): void { this.#wingSpeed = WING_SPEED_BY_PHASE[view.phase]; this.#chips.update(view); }
+  update(view: PokerTable): void { this.#wingSpeed = WING_SPEED_BY_PHASE[view.phase]; this.#chips.update(view); }
   animate(stages: readonly (readonly ChipTransfer[])[]): Promise<boolean> { if(stages.length) this.#wingSpeed = WING_SPEED_BY_PHASE['fly-thinking']; return this.#chips.animate(stages); }
   cancelAnimation(): void { this.#chips.cancel(); }
   destroy(): void {
@@ -175,7 +176,7 @@ export class CasinoScene {
     this.#scene.add(signal);
   }
 
-  private addTable(_view: TableView): void {
+  private addTable(_view: PokerTable): void {
     const pedestal = new THREE.Mesh(
       new THREE.CylinderGeometry(1.3, 1.7, 2.2, 48),
       new THREE.MeshStandardMaterial({ color: SCENE_COLORS.ink, roughness: 0.85 }),
@@ -312,6 +313,7 @@ export class CasinoScene {
     this.#frame = requestAnimationFrame(this.tick);
   };
 }
+
 
 
 

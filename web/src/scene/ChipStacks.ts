@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { TableView } from '../game/model';
+import type { PokerTable } from '../ui/pokerView';
 import type { ChipAccount, ChipTransfer } from '../game/chips';
 const POSITIONS: Record<ChipAccount, THREE.Vector3> = {
  player:new THREE.Vector3(2.25,1.82,1.1), fly:new THREE.Vector3(1.1,1.82,-1.45), pot:new THREE.Vector3(0,1.82,.1),
@@ -16,7 +16,7 @@ export class ChipStacks {
  #frame=0;
  #generation=0;
  #resolve: ((complete:boolean)=>void)|undefined;
- constructor(scene:THREE.Scene,view:TableView){
+ constructor(scene:THREE.Scene,view:PokerTable){
   scene.add(this.#root);
   for(const account of ['player','fly','pot'] satisfies ChipAccount[]){this.#stacks[account].position.copy(POSITIONS[account]);this.#root.add(this.#stacks[account]);}
   this.update(view);
@@ -37,7 +37,7 @@ export class ChipStacks {
   });return group;
  }
  private rebuild(account:ChipAccount):void{const stack=this.#stacks[account];stack.clear();stack.add(this.pile(this.#balances[account]));}
- update(view:TableView):void{
+ update(view:PokerTable):void{
   this.cancel();this.#balances={player:view.playerStackBb,fly:view.flyStackBb,pot:view.potBb};
   for(const account of ['player','fly','pot'] satisfies ChipAccount[])this.rebuild(account);
  }
@@ -72,5 +72,6 @@ export class ChipStacks {
  }
  destroy():void{this.cancel();this.#root.removeFromParent();this.#geometry.dispose();this.#stripeGeometry.dispose();this.#materials.forEach(material=>material.dispose());this.#ivory.dispose();}
 }
+
 
 
