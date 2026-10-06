@@ -102,5 +102,7 @@ html,body,#app{width:100%;height:100%;overflow:hidden}
 .winner-seat{border-color:#fff;background:#181818e0;box-shadow:0 0 20px #ffffff25}
 .revealed-hand .playing-card{width:42px;height:59px}
 .hand-log{max-height:calc(100dvh - 215px)}
-@media(prefers-reduced-motion:no-preference){.deal-card{animation:deal-card .45s ease-out}.revealed-hand .card-slot{animation:reveal-card .55s ease-out}.winner-seat{animation:winner-pulse 1s ease-in-out 2}@keyframes deal-card{from{opacity:0;transform:translateY(-25px) scale(.8)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes reveal-card{from{opacity:.2;transform:rotateY(90deg)}to{opacity:1;transform:rotateY(0)}}@keyframes winner-pulse{50%{box-shadow:0 0 28px #ffffff55}}}
+@media(prefers-reduced-motion:no-preference){.deal-card{animation:deal-card .45s ease-out backwards;animation-delay:var(--deal-delay,0ms)}.reveal-animation .card-slot{animation:reveal-card .55s ease-out}.win-animation{animation:winner-pulse .7s ease-in-out}@keyframes deal-card{from{opacity:0;transform:translateY(-25px) scale(.8)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes reveal-card{from{opacity:.2;transform:rotateY(90deg)}to{opacity:1;transform:rotateY(0)}}@keyframes winner-pulse{50%{box-shadow:0 0 28px #ffffff55}}}
 @media(max-width:700px){.action-controls .all-in{min-width:62px}.action-controls .all-in kbd{display:none}.raise-control{order:5}.revealed-hand .playing-card{width:32px;height:45px}.street-label{font-size:6px;letter-spacing:.6px}}
+
+.community .street-label{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);white-space:nowrap;margin:0 0 8px;font-size:7px}

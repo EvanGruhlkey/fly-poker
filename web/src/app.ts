@@ -8,7 +8,7 @@ import { tableFor,statusFor,type Presentation } from './ui/pokerView';
 export function createAppTitle():string{return 'Poker vs. a Fruit Fly';}
 export function mountApp(root:HTMLElement):()=>void{
  let initial=startHand();let state:PokerState=initial.state;let scene:CasinoScene|undefined;let host:HTMLElement|undefined;
- let display:Presentation={table:tableFor(state),opponentCards:[],winningCards:[],dealingCards:state.holes.player,winner:'none',message:'Posting blinds…',busy:true};
+ let display:Presentation={table:tableFor(state),opponentCards:[],winningCards:[],animation:'none',dealingCards:state.holes.player,winner:'none',message:'Posting blinds…',busy:true};
  let raise=8;let generation=0;let timer:number|undefined;let resolveWait:((valid:boolean)=>void)|undefined;
  const reduced=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const wait=(ms:number,ticket:number)=>new Promise<boolean>(resolve=>{resolveWait=resolve;timer=window.setTimeout(()=>{resolveWait=undefined;timer=undefined;resolve(ticket===generation);},reduced()?0:ms);});
@@ -52,13 +52,15 @@ export function mountApp(root:HTMLElement):()=>void{
     if(!await wait(effect.board.length===3?750:650,ticket))return false;
    }else{
     const result=transition.state.kind==='complete'?transition.state.result:undefined;
-    display={...display,opponentCards:transition.state.holes.fly,dealingCards:[],winningCards:result?.cards??[],winner:result?.winner??'none',message:result?`${result.winner==='split'?'Split pot':result.winner==='player'?'You win':'Fly wins'} · ${result.label}`:'Showdown.'};render();
+    display={...display,opponentCards:transition.state.holes.fly,animation:'reveal',dealingCards:[],winningCards:result?.cards??[],winner:result?.winner??'none',message:result?`${result.winner==='split'?'Split pot':result.winner==='player'?'You win':'Fly wins'} · ${result.label}`:'Showdown.'};render();
     if(!await wait(1000,ticket))return false;
+    display={...display,animation:'none'};
    }
   }
   if(ticket!==generation)return false;
   state=transition.state;display={...display,table:tableFor(state),dealingCards:[],message:statusFor(state),busy:false,winner:state.kind==='complete'?state.result.winner:'none'};
-  scene?.update(display.table);render();return true;
+  display={...display,animation:state.kind==='complete'?'win':'none'};scene?.update(display.table);render();
+  if(state.kind==='complete'){if(!await wait(750,ticket))return false;display={...display,animation:'none'};render();}return true;
  };
  const flyTurns=async(ticket:number)=>{
   while(ticket===generation&&state.kind==='betting'&&state.turn==='fly'){
@@ -79,7 +81,7 @@ export function mountApp(root:HTMLElement):()=>void{
  };
  const begin=async(transition:Transition,stacks:{readonly player:number;readonly fly:number})=>{
   const ticket=++generation;state=transition.state;raise=8;
-  display={table:{...tableFor(state),playerStackBb:stacks.player/4,flyStackBb:stacks.fly/4,potBb:0,board:[]},opponentCards:[],winningCards:[],dealingCards:state.holes.player,winner:'none',message:'Dealing a new hand…',busy:true};
+  display={table:{...tableFor(state),playerStackBb:stacks.player/4,flyStackBb:stacks.fly/4,potBb:0,board:[]},opponentCards:[],winningCards:[],animation:'none',dealingCards:state.holes.player,winner:'none',message:'Dealing a new hand…',busy:true};
   render();scene?.update(display.table);if(!await wait(500,ticket))return;
   if(await execute(transition,ticket))await flyTurns(ticket);
  };
@@ -91,3 +93,4 @@ export function mountApp(root:HTMLElement):()=>void{
  void begin(initial,{player:400,fly:400});window.addEventListener('keydown',keyboard);
  return()=>{cancel();window.removeEventListener('keydown',keyboard);scene?.destroy();};
 }
+

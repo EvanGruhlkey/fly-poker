@@ -3,7 +3,7 @@ import { startHand,play } from '../game/poker';
 import { orderedDeck } from '../game/deck';
 import { pokerMarkup } from './pokerHud';
 import { tableFor,statusFor,type Presentation } from './pokerView';
-const presentation=(state:ReturnType<typeof startHand>['state']):Presentation=>({table:tableFor(state),opponentCards:[],winningCards:[],dealingCards:[],winner:'none',message:statusFor(state),busy:false});
+const presentation=(state:ReturnType<typeof startHand>['state']):Presentation=>({table:tableFor(state),opponentCards:[],winningCards:[],animation:'none',dealingCards:[],winner:'none',message:statusFor(state),busy:false});
 describe('real poker interface',()=>{
  it('shows legal blind calls, true cards, and protects the fly hand',()=>{
   const state=startHand({deck:orderedDeck()}).state;const markup=pokerMarkup(state,presentation(state));
@@ -21,3 +21,4 @@ describe('real poker interface',()=>{
   expect(markup).toContain('data-action="call" disabled');expect(markup).toContain('The fly is thinking');
  });
 });
+
