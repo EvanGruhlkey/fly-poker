@@ -27,7 +27,7 @@ export function act(state: DemoSession, action: 'fold' | 'call' | 'raise', amoun
   table: { ...state.table, board: board.slice(0, finished ? 5 : Math.min(5, street + 3)),
    playerStackBb: state.table.playerStackBb - paid, flyStackBb: state.table.flyStackBb - flyPaid + (finished ? pot : 0), potBb: finished ? 0 : pot,
    phase: finished ? 'showdown' : 'player-turn' },
-  history: [...state.history, paid === 0 ? 'You check. Fly checks.' : `You ${action === 'raise' ? 'raise to' : 'call'} ${paid} BB.${flyPaid > 0 ? ' Fly calls.' : ''}`,
+  history: [...state.history, paid === 0 ? 'You check. Fly checks.' : `You ${action === 'raise' ? (state.toCall > 0 ? 'raise to' : 'bet') : 'call'} ${paid} BB.${flyPaid > 0 ? ' Fly calls.' : ''}`,
    finished ? 'Fly shows A♥ 8♠. Pair of aces wins.' : `${street === 1 ? 'Turn' : 'River'} dealt. Fly checks.`],
   message: finished ? 'The fly wins with a pair of aces. Scripted demo hand.' : 'The fly checks. Check back or make a bet.' };
 }
