@@ -25,13 +25,6 @@ button:disabled{opacity:.4;cursor:default}
 .header-right{display:flex;align-items:center;gap:16px}
 .demo-badge{font:9px var(--mono);letter-spacing:1px;color:var(--green);border:1px solid #8be05a26;background:#8be05a08;border-radius:4px;padding:5px 8px;white-space:nowrap}
 .demo-badge i{margin-right:6px}
-.intro{display:flex;align-items:center;justify-content:space-between;padding:34px 0 29px}
-.intro h1{font:44px/1.15 var(--display);letter-spacing:-1.1px;margin:10px 0 9px}
-.intro h1 em{color:var(--amber-2);font-weight:400}
-.intro p{color:var(--muted);font-size:13px;margin:0}
-.intro-note{font:14px var(--display);text-align:right;margin-right:3px}
-.intro-note .status-dot{margin-right:7px}
-.intro-note small{display:block;font:10px var(--mono);color:var(--muted);margin-top:8px}
 .game-layout{display:grid;grid-template-columns:minmax(0,1fr) 306px;gap:20px;align-items:start}
 .table-panel,.lab-panel{background:var(--bg-2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .table-topline{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 21px;border-bottom:1px solid var(--line);font:9px var(--mono);letter-spacing:1.2px;color:var(--muted)}
@@ -63,7 +56,6 @@ button:disabled{opacity:.4;cursor:default}
 .pot-chip small{font:10px var(--mono)}
 .board{display:flex;gap:8px}
 .playing-card{display:inline-block;width:55px;height:77px;filter:drop-shadow(0 4px 4px #0006)}
-.playing-card svg{width:100%;height:100%;display:block}
 .empty-card{width:55px;height:77px;border:1px dashed #b2c39942;border-radius:5px;background:#0000000b}
 .street-label{display:block;font:8px var(--mono);letter-spacing:1.5px;color:#b1c69a;margin-top:12px}
 .street-label i{margin:0 7px;font-style:normal;color:#7c975e}
@@ -119,8 +111,6 @@ button:disabled{opacity:.4;cursor:default}
 .history li{display:flex;gap:11px;color:#c0c6ac;font-size:10px;line-height:1.6;padding:8px 0;border-bottom:1px solid #2d342366}
 .history-index{font:8px var(--mono);color:#5a6a48;padding-top:4px}
 .table-rules{display:flex;justify-content:space-between;font:7px var(--mono);color:var(--muted);padding-top:6px}
-footer{display:flex;justify-content:space-between;align-items:center;padding:24px 0 28px;font:7px var(--mono);letter-spacing:1.2px;color:#727e60}
-footer a{color:var(--muted);letter-spacing:0;font-size:9px;text-decoration:none}
 dialog{max-width:490px;padding:32px;color:var(--text);border:1px solid var(--line-2);border-radius:12px;background:var(--surface);box-shadow:0 20px 100px #000a}
 dialog::backdrop{background:#000a;backdrop-filter:blur(5px)}
 dialog h2{font:32px var(--display);margin:15px 0}
@@ -128,87 +118,3 @@ dialog h2 em{color:var(--amber-2)}
 dialog p{font-size:13px;line-height:1.8;color:#b2b9a1}
 .dialog-close{position:absolute;top:13px;right:13px;font-size:16px;padding:3px 10px}
 .webgl-error{display:grid;place-items:center;height:100%;color:var(--muted);padding:24px;font-size:12px}
-
-@media(min-width:1500px){.casino-stage{height:570px}
-.community{top:242px}
-.table-wordmark{top:189px}
-}
-
-@media(max-width:1150px){.casino-app{padding:0 24px}
-.game-layout{grid-template-columns:minmax(0,1fr) 270px;gap:14px}
-.lab-panel{padding:16px}
-.intro h1{font-size:37px}
-.intro-note{display:none}
-.action-controls{gap:7px}
-.action-controls>.btn{min-width:75px;padding:10px}
-.action-controls kbd{display:none}
-.action-controls .btn-primary{min-width:115px}
-.turn-message small{display:none}
-.table-topline>.mono{font-size:7px}
-.camera-help{font-size:6px}
-}
-
-@media(max-width:900px){.game-layout{grid-template-columns:minmax(0,1fr)}
-.lab-sidebar{grid-template-columns:1fr 1fr}
-.casino-stage{height:510px}
-.intro{padding:26px 0}
-.site-header{height:80px}
-.header-right .btn-ghost{display:none}
-.camera-help{left:18px;font-size:7px}
-.brain-visual{height:143px}
-}
-
-@media(max-width:580px){.casino-app{padding:0 12px}
-.site-header{height:72px}
-.brand{font-size:29px;gap:8px}
-.brand img{width:32px}
-.brand small{font-size:6px;letter-spacing:1px}
-.header-right{gap:7px}
-.header-right>.demo-badge{display:none}
-.header-right>.btn{font-size:10px;padding:8px 10px}
-.intro h1{font-size:31px;letter-spacing:-.6px;margin-top:9px}
-.intro p{font-size:11px}
-.intro .eyebrow{font-size:7px;letter-spacing:1.5px}
-.table-topline{padding:0 12px;height:38px;font-size:8px}
-.table-topline>.mono{display:none}
-.casino-stage{height:460px}
-.fly-seat{top:22px}
-.opponent-cards{top:102px}
-.table-wordmark{top:153px}
-.community{top:187px}
-.playing-card,.empty-card{width:43px;height:60px}
-.board{gap:6px}
-.your-hand{bottom:90px}
-.seat{padding:8px 12px}
-.camera-help{display:none}
-.action-dock{padding:0 12px 14px}
-.turn-message{font-size:10px;height:45px;line-height:1.4}
-.action-controls{flex-wrap:wrap;gap:8px}
-.action-controls>.btn{flex:1;font-size:11px;height:42px}
-.raise-control{order:4;flex-basis:100%;padding:8px 0 2px}
-.raise-control input{height:8px}
-.action-controls .btn-primary{min-width:110px}
-.lab-sidebar{grid-template-columns:1fr}
-.brain-visual{height:163px}
-.brain-visual svg{height:145px}
-.brain-stats{gap:50px}
-.history-panel{padding:18px}
-.history li{font-size:11px}
-footer{padding-top:20px;gap:10px;line-height:1.7;font-size:6px}
-footer>span:last-child{display:none}
-}
-
-@media(prefers-reduced-motion:no-preference){.brain-visual circle{animation:twinkle 3s ease-in-out infinite alternate}
-.brain-visual circle:nth-child(4n){animation-delay:-1.5s}
-@keyframes twinkle{to{opacity:.3}
-}
-}
-
-.playing-card img{width:100%;height:100%;display:block}
-
-
-.opponent-cards .playing-card{width:28px;height:39px}.your-hand .playing-card{width:57px;height:80px}
-@media(min-width:901px){.community{top:190px}.table-wordmark{top:155px}.your-hand{bottom:90px}.casino-stage{height:470px}.fly-seat{top:20px}.opponent-cards{top:100px}}
-@media(min-width:1500px){.casino-stage{height:530px}.community{top:220px}.table-wordmark{top:181px}}
-@media(min-width:980px) and (max-height:850px){.site-header{height:70px}.intro{padding:19px 0 18px}.intro h1{font-size:36px;margin:7px 0}.intro p{font-size:12px}.intro .eyebrow{font-size:8px}.casino-stage{height:400px}.fly-seat{top:15px}.opponent-cards{top:92px}.table-wordmark{top:120px}.community{top:144px}.board .playing-card,.empty-card{width:48px;height:67px}.your-hand{bottom:76px}.your-hand .playing-card{width:48px;height:67px}.player-seat{bottom:9px;padding:7px 13px}.action-dock{padding-bottom:15px}.turn-message{height:40px}.lab-panel{padding:16px}.brain-visual{height:124px}.brain-visual svg{height:108px}.brain-caption{font-size:6px}.brain-legend{margin:10px 0 13px}.brain-stats{padding-top:10px}.demo-notice{margin-top:13px;padding-top:10px}.panel-subtitle{margin-bottom:10px}.history{margin:12px 0}.history li{padding:6px 0}footer{padding:15px 0;font-size:6px}}
-@media(min-width:980px) and (max-height:850px){.casino-stage{height:360px}.fly-seat{top:8px}.opponent-cards{top:83px}.table-wordmark{display:none}.community{top:123px}.community .street-label{display:none}.your-hand{bottom:70px}.your-hand .playing-card{width:43px;height:60px}.player-seat{bottom:7px}}
