@@ -79,6 +79,59 @@ export class CasinoScene {
     this.#host.replaceChildren();
   }
 
+  private addCasinoDetails(): void {
+    const brass = new THREE.MeshStandardMaterial({ color: 0xb88a41, metalness: .72, roughness: .36 });
+    const walnut = new THREE.MeshStandardMaterial({ color: 0x342719, roughness: .68 });
+    const leather = new THREE.MeshStandardMaterial({ color: 0x442d25, roughness: .8 });
+    const warm = new THREE.MeshStandardMaterial({ color: 0xffcf75, emissive: 0xf6a92e, emissiveIntensity: .65 });
+    const box = (width: number, height: number, depth: number, x: number, y: number, z: number, material: THREE.MeshStandardMaterial) => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
+      mesh.position.set(x, y, z); mesh.castShadow = true; mesh.receiveShadow = true;
+      this.#scene.add(mesh); return mesh;
+    };
+    box(28, 1.5, .25, 0, .75, -6.8, walnut);
+    box(28, .05, .35, 0, 1.55, -6.6, brass);
+    for (const x of [-8, -5, 5, 8]) {
+      box(.1, 4, .1, x, 3.4, -6.6, brass);
+      box(1.8, .07, .1, x, 5.4, -6.6, brass);
+      box(1.8, .07, .1, x, 1.6, -6.6, brass);
+      for (const edge of [-.9, .9]) box(.05, 3.8, .08, x + edge, 3.5, -6.6, brass);
+      const shade = new THREE.Mesh(new THREE.CylinderGeometry(.35,.52,.62,24,1,true), warm);
+      shade.position.set(x,3.75,-5.95); this.#scene.add(shade);
+      box(.055,.9,.055,x,3.2,-6.15,brass);
+      const bulb = new THREE.PointLight(0xffb84f,8,6,2); bulb.position.set(x,3.5,-5.5); this.#scene.add(bulb);
+    }
+    for (const x of [-4.7, 4.7]) {
+      const seat = new THREE.Mesh(new THREE.CylinderGeometry(.7,.7,.3,32),leather);
+      seat.position.set(x,.9,-2.1); this.#scene.add(seat);
+      box(1.35,1.5,.2,x,1.5,-2.55,leather);
+      for (const side of [-.45,.45]) box(.09,1.2,.09,x+side,.2,-2,brass);
+      box(1.4,.06,.22,x,2.27,-2.55,brass);
+    }
+    const lightRing = new THREE.Mesh(new THREE.TorusGeometry(1.7,.065,8,64),brass);
+    lightRing.rotation.x = Math.PI/2; lightRing.position.set(0,5.7,0); this.#scene.add(lightRing);
+    for (let i=0;i<8;i++) {
+      const angle = i*Math.PI/4;
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(.095,12,8),warm);
+      bulb.position.set(Math.cos(angle)*1.7,5.68,Math.sin(angle)*1.7); this.#scene.add(bulb);
+    }
+    const railInlay = new THREE.Mesh(new THREE.TorusGeometry(3.55,.012,8,96),brass);
+    railInlay.rotation.x = Math.PI/2; railInlay.scale.y=.64; railInlay.position.y=1.685; this.#scene.add(railInlay);
+    for (const x of [-2.9,2.9]) {
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.015,24),brass);
+      cup.position.set(x,1.97,.95); this.#scene.add(cup);
+      const center = new THREE.Mesh(new THREE.CylinderGeometry(.11,.11,.02,24),walnut);
+      center.position.set(x,1.975,.95); this.#scene.add(center);
+    }
+    const cloth = document.createElement('canvas'); cloth.width=256; cloth.height=256;
+    const ctx = cloth.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle='#142f22';ctx.fillRect(0,0,256,256);
+      for(let x=0;x<256;x+=4)for(let y=0;y<256;y+=4){ctx.fillStyle=(x+y)%8?'#1d3d2a':'#234831';ctx.fillRect(x,y,1,1);}
+      const texture = new THREE.CanvasTexture(cloth); texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(8,8);
+      this.#scene.traverse(part => {if(part instanceof THREE.Mesh && part.geometry instanceof THREE.CylinderGeometry && part.geometry.parameters.radiusTop===3.85 && part.material instanceof THREE.MeshStandardMaterial){part.material.map=texture;part.material.needsUpdate=true;}});
+    }
+  }
   private addRoom(): void {
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(40, 40),
@@ -264,4 +317,5 @@ export class CasinoScene {
     this.#frame = requestAnimationFrame(this.tick);
   };
 }
+
 
