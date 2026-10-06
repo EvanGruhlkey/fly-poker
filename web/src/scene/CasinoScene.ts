@@ -188,15 +188,23 @@ export class CasinoScene {
     const amber = new THREE.MeshStandardMaterial({ color: SCENE_COLORS.amber, roughness: 0.78 });
     const dark = new THREE.MeshStandardMaterial({ color: SCENE_COLORS.ink, roughness: 0.9 });
     const red = new THREE.MeshStandardMaterial({ color: SCENE_COLORS.red, roughness: 0.48 });
+    const wingMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd7dbb4,
+      transparent: true,
+      opacity: 0.38,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      roughness: 0.5,
+    });
     const legGeometry = new THREE.CylinderGeometry(0.018, 0.026, 0.38, 8);
 
     const abdomen = new THREE.Mesh(new THREE.SphereGeometry(0.36, 24, 16), amber);
     abdomen.scale.set(0.72, 0.68, 1.35);
     abdomen.position.z = -0.28;
-    const thorax = new THREE.Mesh(new THREE.SphereGeometry(0.34, 24, 16), dark);
+    const thorax = new THREE.Mesh(new THREE.SphereGeometry(0.34, 24, 16), amber);
     thorax.scale.set(0.92, 0.84, 1.05);
     thorax.position.z = 0.15;
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 24, 16), dark);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 24, 16), amber);
     head.scale.set(1.08, 0.92, 0.95);
     head.position.z = 0.57;
     this.#fly.add(abdomen, thorax, head);
@@ -241,14 +249,7 @@ export class CasinoScene {
       wingPivot.position.set(side * 0.22, 0.2, -0.02);
       const wing = new THREE.Mesh(
         new THREE.CircleGeometry(0.48, 28),
-        new THREE.MeshStandardMaterial({
-          color: 0xd7dbb4,
-          transparent: true,
-          opacity: 0.38,
-          side: THREE.DoubleSide,
-          depthWrite: false,
-          roughness: 0.5,
-        }),
+        wingMaterial,
       );
       wing.scale.set(0.58, 1.35, 1);
       wing.position.x = side * 0.35;
@@ -260,11 +261,11 @@ export class CasinoScene {
     }
 
     this.#fly.traverse((part) => {
-      if (part instanceof THREE.Mesh && !this.#wingPivots.some((pivot) => pivot.children.includes(part))) {
+      if (part instanceof THREE.Mesh && part.material !== wingMaterial) {
         part.castShadow = true;
       }
     });
-    this.#fly.position.set(0, 2.65, -2.3);
+    this.#fly.position.set(-2, 2.65, -2.3);
     this.#fly.rotation.x = -0.18;
     this.#fly.scale.setScalar(1.12);
     this.#scene.add(this.#fly);
