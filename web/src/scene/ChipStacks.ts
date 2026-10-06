@@ -43,7 +43,7 @@ export class ChipStacks {
  }
  cancel():void{
   this.#generation++;cancelAnimationFrame(this.#frame);this.#resolve?.(false);this.#resolve=undefined;
-  this.#root.children.filter(child=>!Object.values(this.#stacks).includes(child)).forEach(child=>this.#root.remove(child));
+  this.#root.children.filter(child=>!Object.values(this.#stacks).some(stack=>stack===child)).forEach(child=>this.#root.remove(child));
  }
  async animate(stages:readonly (readonly ChipTransfer[])[]):Promise<boolean>{
   const generation=this.#generation;
@@ -72,3 +72,4 @@ export class ChipStacks {
  }
  destroy():void{this.cancel();this.#root.removeFromParent();this.#geometry.dispose();this.#stripeGeometry.dispose();this.#materials.forEach(material=>material.dispose());this.#ivory.dispose();}
 }
+
