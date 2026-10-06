@@ -10,7 +10,7 @@ const SCENE_COLORS = {
   wall: 0x1b2013,
   ink: 0x1b1b11,
   olive: 0x48512d,
-  felt: 0x18482e,
+  felt: 0x12422f,
   parchment: 0xe4d6ad,
   amber: 0xd28b32,
   signal: 0x91c54a,
@@ -126,8 +126,8 @@ export class CasinoScene {
     const cloth = document.createElement('canvas'); cloth.width=256; cloth.height=256;
     const ctx = cloth.getContext('2d');
     if (ctx) {
-      ctx.fillStyle='#142f22';ctx.fillRect(0,0,256,256);
-      for(let x=0;x<256;x+=4)for(let y=0;y<256;y+=4){ctx.fillStyle=(x+y)%8?'#1d3d2a':'#234831';ctx.fillRect(x,y,1,1);}
+      ctx.fillStyle='#123b2a';ctx.fillRect(0,0,256,256);
+      for(let x=0;x<256;x+=4)for(let y=0;y<256;y+=4){ctx.fillStyle=(x+y)%8?'#183f2d':'#1c4933';ctx.fillRect(x,y,1,1);}
       const texture = new THREE.CanvasTexture(cloth); texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(8,8);
       this.#scene.traverse(part => {if(part instanceof THREE.Mesh && part.geometry instanceof THREE.CylinderGeometry && part.geometry.parameters.radiusTop===3.85 && part.material instanceof THREE.MeshStandardMaterial){part.material.map=texture;part.material.needsUpdate=true;}});
     }
@@ -317,6 +317,7 @@ export class CasinoScene {
     this.#frame = requestAnimationFrame(this.tick);
   };
 }
+
 
 
 
