@@ -50,7 +50,7 @@ def sample_states(rng: np.random.Generator, count: int, budget: Budget) -> list[
     states: list[Observation] = []
     while len(states) < count:
         budget.check()
-        env = Holdem(int(rng.integers(0, 2**31)), dealer=int(rng.integers(0, 2)))
+        env = Holdem(int(rng.integers(0, 2**30)), dealer=int(rng.integers(0, 2)))
         hand = []
         while not env.terminal:
             budget.check()
@@ -61,3 +61,4 @@ def sample_states(rng: np.random.Generator, count: int, budget: Budget) -> list[
         rng.shuffle(hand)
         states.extend(hand)
     return states[:count]
+
