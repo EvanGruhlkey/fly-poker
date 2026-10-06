@@ -109,12 +109,15 @@ export class CasinoScene {
       box(.055,.9,.055,x,3.2,-6.15,brass);
       const bulb = new THREE.PointLight(0xffb84f,8,6,2); bulb.position.set(x,3.5,-5.5); this.#scene.add(bulb);
     }
-    for (const x of [-4.7, 4.7]) {
+    for (const side of [-1, 1]) {
+      const z = side * 3.4;
       const seat = new THREE.Mesh(new THREE.CylinderGeometry(.7,.7,.3,32),leather);
-      seat.position.set(x,.9,-2.1); this.#scene.add(seat);
-      box(1.35,1.5,.2,x,1.5,-2.55,leather);
-      for (const side of [-.45,.45]) box(.09,1.2,.09,x+side,.2,-2,brass);
-      box(1.4,.06,.22,x,2.27,-2.55,brass);
+      seat.position.set(0,1.25,z); seat.castShadow = true; this.#scene.add(seat);
+      box(1.35,1.5,.2,0,2,z + side * .55,leather);
+      for (const x of [-.45,.45]) {
+        for (const offset of [-.4,.4]) box(.09,1.2,.09,x,.55,z + offset,brass);
+      }
+      box(1.4,.06,.22,0,2.77,z + side * .55,brass);
     }
     const lightRing = new THREE.Mesh(new THREE.TorusGeometry(1.7,.065,8,64),brass);
     lightRing.rotation.x = Math.PI/2; lightRing.position.set(0,5.7,0); this.#scene.add(lightRing);
@@ -283,7 +286,7 @@ export class CasinoScene {
         part.castShadow = true;
       }
     });
-    this.#fly.position.set(0, 2.65, -1.65);
+    this.#fly.position.set(0, 2.1, -3.4);
     this.#fly.rotation.x = -0.18;
     this.#fly.scale.setScalar(1.12);
     this.#scene.add(this.#fly);
@@ -302,7 +305,6 @@ export class CasinoScene {
 
   private tick = (): void => {
     const time = this.#clock.getElapsedTime();
-    this.#fly.position.y = 2.65 + Math.sin(time * 2) * 0.08;
     this.#wingPivots.forEach((pivot, index) => {
       pivot.rotation.z = Math.sin(time * this.#wingSpeed) * 0.28 * (index === 0 ? -1 : 1);
     });
