@@ -12,13 +12,18 @@ export function createSession(handNumber = 1): DemoSession {
   history: ['Flop · A♠ 9♦ 4♣', 'Fly bets 4.25 BB. Your move.'],
   message: 'The fly bets 4.25 BB. Your move.' };
 }
-export function act(state: DemoSession, action: 'fold' | 'call' | 'raise', amount: number): DemoSession {
+export type DemoAction = 'fold' | 'call' | 'raise';
+export function contributions(state: DemoSession, action: DemoAction, amount: number): { player: number; fly: number } {
+ if (state.kind === 'finished' || action === 'fold') return {player:0,fly:0};
+ const player = Math.min(state.table.playerStackBb, state.table.flyStackBb, action === 'call' ? state.toCall : Math.max(state.toCall > 0 ? state.toCall * 2 : 1, amount));
+ return {player,fly:Math.max(0,player-state.toCall)};
+}
+export function act(state: DemoSession, action: DemoAction, amount: number): DemoSession {
  if (state.kind === 'finished') return state;
  if (action === 'fold') return { ...state, kind: 'finished',
   table: { ...state.table, flyStackBb: state.table.flyStackBb + state.table.potBb, potBb: 0 },
   history: [...state.history, 'You fold. Fly wins.'], message: 'You folded. The fly takes the pot.' };
- const paid = Math.min(state.table.playerStackBb, state.table.flyStackBb, action === 'call' ? state.toCall : Math.max(state.toCall > 0 ? state.toCall * 2 : 1, amount));
- const flyPaid = Math.max(0, paid - state.toCall);
+ const {player:paid,fly:flyPaid} = contributions(state,action,amount);
  const board: readonly Card[] = ['AS', '9D', '4C', 'TH', '2S'];
  const street = state.street + 1;
  const finished = street >= 3 || paid === state.table.playerStackBb || flyPaid === state.table.flyStackBb;
@@ -31,4 +36,5 @@ export function act(state: DemoSession, action: 'fold' | 'call' | 'raise', amoun
    finished ? 'Fly shows A♥ 8♠. Pair of aces wins.' : `${street === 1 ? 'Turn' : 'River'} dealt. Fly checks.`],
   message: finished ? 'The fly wins with a pair of aces. Scripted demo hand.' : 'The fly checks. Check back or make a bet.' };
 }
+
 
