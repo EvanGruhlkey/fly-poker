@@ -50,8 +50,8 @@ export class CasinoScene {
 
     this.#scene.background = new THREE.Color(SCENE_COLORS.background);
     this.#scene.fog = new THREE.FogExp2(SCENE_COLORS.background, 0.038);
-    this.#camera.position.set(0, 7.2, 10.2);
-    this.#camera.lookAt(0, 0.6, 0);
+    this.#camera.position.set(0, 7.8, 8.5);
+    this.#camera.lookAt(0, 1.5, 0);
 
     this.addRoom();
     this.addCasinoDetails();
@@ -317,5 +317,6 @@ export class CasinoScene {
     this.#frame = requestAnimationFrame(this.tick);
   };
 }
+
 
 

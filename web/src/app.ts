@@ -6,7 +6,7 @@ export function createAppTitle(): string { return 'Poker vs. a Fruit Fly'; }
 export function mountApp(root: HTMLElement): () => void {
  let state = createSession();
  let scene: CasinoScene | undefined;
- let raise = 8;
+ let raise = 8.5;
  const render = () => {
   scene?.destroy();
   root.innerHTML = hudMarkup(state.table, state);
@@ -15,7 +15,7 @@ export function mountApp(root: HTMLElement): () => void {
   try { scene = new CasinoScene(host, state.table, qualityForWidth(window.innerWidth)); }
   catch { host.innerHTML = '<div class="webgl-error">3D view unavailable. The table controls and cards remain playable.</div>'; }
   const slider = root.querySelector<HTMLInputElement>('[data-raise-slider]');
-  if (slider) { slider.value = String(raise); slider.addEventListener('input', () => {
+  if (slider) { raise = Math.min(Number(slider.max), Math.max(Number(slider.min), raise)); slider.value = String(raise); root.querySelectorAll('[data-raise-value],[data-raise-button]').forEach(node => { node.textContent = `${raise} BB`; }); slider.addEventListener('input', () => {
    raise = slider.valueAsNumber;
    root.querySelectorAll('[data-raise-value],[data-raise-button]').forEach(node => { node.textContent = `${raise} BB`; });
   }); }
@@ -23,7 +23,7 @@ export function mountApp(root: HTMLElement): () => void {
    const action = button.dataset.action;
    if (action === 'fold' || action === 'call' || action === 'raise') { state = act(state, action, raise); render(); }
   }));
-  root.querySelector('[data-new-game]')?.addEventListener('click', () => { state = createSession(state.table.handNumber + 1); raise = 8; render(); });
+  root.querySelector('[data-new-game]')?.addEventListener('click', () => { state = createSession(state.table.handNumber + 1); raise = 8.5; render(); });
   const dialog = root.querySelector<HTMLDialogElement>('[data-about]');
   root.querySelectorAll('[data-info]').forEach(button => button.addEventListener('click', () => dialog?.showModal()));
   root.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => dialog?.close()));
@@ -37,3 +37,4 @@ export function mountApp(root: HTMLElement): () => void {
  render(); window.addEventListener('keydown', keyboard);
  return () => { window.removeEventListener('keydown', keyboard); scene?.destroy(); };
 }
+

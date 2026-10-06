@@ -208,3 +208,5 @@ footer>span:last-child{display:none}
 
 
 .opponent-cards .playing-card{width:28px;height:39px}.your-hand .playing-card{width:57px;height:80px}
+@media(min-width:901px){.community{top:190px}.table-wordmark{top:155px}.your-hand{bottom:90px}.casino-stage{height:470px}.fly-seat{top:20px}.opponent-cards{top:100px}}
+@media(min-width:1500px){.casino-stage{height:530px}.community{top:220px}.table-wordmark{top:181px}}

@@ -17,7 +17,7 @@ export function act(state: DemoSession, action: 'fold' | 'call' | 'raise', amoun
  if (action === 'fold') return { ...state, kind: 'finished',
   table: { ...state.table, flyStackBb: state.table.flyStackBb + state.table.potBb, potBb: 0 },
   history: [...state.history, 'You fold. Fly wins.'], message: 'You folded. The fly takes the pot.' };
- const paid = Math.min(state.table.playerStackBb, state.table.flyStackBb, action === 'call' ? state.toCall : Math.max(state.toCall + 1, amount));
+ const paid = Math.min(state.table.playerStackBb, state.table.flyStackBb, action === 'call' ? state.toCall : Math.max(state.toCall > 0 ? state.toCall * 2 : 1, amount));
  const flyPaid = Math.max(0, paid - state.toCall);
  const board: readonly Card[] = ['AS', '9D', '4C', 'TH', '2S'];
  const street = state.street + 1;
@@ -31,3 +31,4 @@ export function act(state: DemoSession, action: 'fold' | 'call' | 'raise', amoun
    finished ? 'Fly shows A♥ 8♠. Pair of aces wins.' : `${street === 1 ? 'Turn' : 'River'} dealt. Fly checks.`],
   message: finished ? 'The fly wins with a pair of aces. Scripted demo hand.' : 'The fly checks. Check back or make a bet.' };
 }
+
