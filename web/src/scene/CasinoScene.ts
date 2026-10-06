@@ -50,7 +50,7 @@ export class CasinoScene {
 
     this.#scene.background = new THREE.Color(SCENE_COLORS.background);
     this.#scene.fog = new THREE.FogExp2(SCENE_COLORS.background, 0.038);
-    this.#camera.position.set(0, 7.8, 8.5);
+    this.#camera.position.set(0, 6.8, 9);
     this.#camera.lookAt(0, 1.5, 0);
 
     this.addRoom();
@@ -311,6 +311,9 @@ export class CasinoScene {
     const width = this.#host.clientWidth;
     const height = this.#host.clientHeight;
     this.#camera.aspect = width / Math.max(1, height);
+    this.#camera.fov = width < 700 ? 65 : 38;
+    this.#camera.position.set(0, width < 700 ? 10 : 6.8, width < 700 ? 12 : 9);
+    this.#camera.lookAt(0, 1.5, 0);
     this.#camera.updateProjectionMatrix();
     this.#renderer.setSize(width, height, false);
   }
@@ -325,6 +328,7 @@ export class CasinoScene {
     this.#frame = requestAnimationFrame(this.tick);
   };
 }
+
 
 
 
