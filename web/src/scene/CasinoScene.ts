@@ -209,6 +209,14 @@ export class CasinoScene {
       chip.position.set(x, 1.82 + index * 0.045, z);
       chip.castShadow = true;
       this.#scene.add(chip);
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(.15,.009,4,24),new THREE.MeshStandardMaterial({color:0xf1e9cf,roughness:.8}));
+      rim.rotation.x = Math.PI/2; rim.position.set(x,1.845+index*.045,z); this.#scene.add(rim);
+      for(let edge=0;edge<6;edge++) {
+        const angle=edge*Math.PI/3;
+        const stripe=new THREE.Mesh(new THREE.BoxGeometry(.07,.043,.017),new THREE.MeshStandardMaterial({color:0xeee5ca,roughness:.8}));
+        stripe.position.set(x+Math.cos(angle)*.194,1.82+index*.045,z+Math.sin(angle)*.194);
+        stripe.rotation.y=-angle+Math.PI/2; this.#scene.add(stripe);
+      }
     }
   }
 
@@ -317,6 +325,7 @@ export class CasinoScene {
     this.#frame = requestAnimationFrame(this.tick);
   };
 }
+
 
 
 
