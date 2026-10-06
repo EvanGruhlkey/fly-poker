@@ -3,7 +3,7 @@ import type { PokerState } from '../game/pokerTypes';
 export type PokerTable=Pick<TableView,'phase'|'handNumber'|'potBb'|'playerStackBb'|'flyStackBb'|'playerCards'|'board'>;
 export interface Presentation {
  readonly table:PokerTable;readonly opponentCards:readonly Card[];readonly winningCards:readonly Card[];
- readonly winner:'player'|'fly'|'split'|'none';readonly message:string;readonly busy:boolean;
+ readonly dealingCards:readonly Card[];readonly winner:'player'|'fly'|'split'|'none';readonly message:string;readonly busy:boolean;
 }
 export function tableFor(state:PokerState):PokerTable{
  return {phase:state.kind==='complete'?'showdown':state.turn==='fly'?'fly-thinking':'player-turn',handNumber:state.handNumber,
@@ -18,3 +18,4 @@ export function statusFor(state:PokerState):string{
  }
  return state.turn==='fly'?'The fly is thinking…':'Your turn.';
 }
+
