@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { TableView } from '../game/model';
 import type { ChipAccount, ChipTransfer } from '../game/chips';
 const POSITIONS: Record<ChipAccount, THREE.Vector3> = {
- player:new THREE.Vector3(1.1,1.82,1.5), fly:new THREE.Vector3(1.1,1.82,-1.45), pot:new THREE.Vector3(0,1.82,.1),
+ player:new THREE.Vector3(2.25,1.82,1.1), fly:new THREE.Vector3(1.1,1.82,-1.45), pot:new THREE.Vector3(0,1.82,.1),
 };
 const DENOMINATIONS=[25,5,1,.25];
 export class ChipStacks {
@@ -72,4 +72,5 @@ export class ChipStacks {
  }
  destroy():void{this.cancel();this.#root.removeFromParent();this.#geometry.dispose();this.#stripeGeometry.dispose();this.#materials.forEach(material=>material.dispose());this.#ivory.dispose();}
 }
+
 
