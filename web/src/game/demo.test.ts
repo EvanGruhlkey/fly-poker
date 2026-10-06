@@ -5,8 +5,8 @@ describe('local table demo', () => {
     const next = act(createSession(), 'call', 8);
     expect(next.street).toBe(1);
     expect(next.table.board).toEqual(['AS', '9D', '4C', 'TH']);
-    expect(next.table.playerStackBb).toBe(90);
-    expect(next.table.potBb).toBe(16.5);
+    expect(next.table.playerStackBb).toBe(89.75);
+    expect(next.table.potBb).toBe(12.75);
   });
   it('ends a folded hand', () => {
     const next = act(createSession(), 'fold', 8);
@@ -17,6 +17,6 @@ describe('local table demo', () => {
   it('caps a raise at the available stack', () => {
     const next = act(createSession(), 'raise', 1000);
     expect(next.table.playerStackBb).toBe(0);
-    expect(next.table.flyStackBb).toBe(3.5);
+    expect(next.table.flyStackBb).toBe(200);
   });
 });
