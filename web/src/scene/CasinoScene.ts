@@ -1,16 +1,16 @@
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-import type { Card, SceneQuality, TablePhase, TableView } from "../game/model";
 
-const CARD_RED = new Set(["D", "H"]);
+import type { SceneQuality, TablePhase, TableView } from "../game/model";
+
+
 const SCENE_COLORS = {
   background: 0x11140d,
   floor: 0x26291a,
   wall: 0x1b2013,
   ink: 0x1b1b11,
   olive: 0x48512d,
-  felt: 0x344729,
+  felt: 0x18482e,
   parchment: 0xe4d6ad,
   amber: 0xd28b32,
   signal: 0x91c54a,
@@ -34,6 +34,7 @@ export class CasinoScene {
   readonly #wingPivots: THREE.Group[] = [];
   readonly #wingSpeed: number;
   readonly #resize = () => this.resize();
+  readonly #observer = new ResizeObserver(this.#resize);
   #frame = 0;
 
   constructor(host: HTMLElement, view: TableView, quality: SceneQuality) {
@@ -49,28 +50,31 @@ export class CasinoScene {
 
     this.#scene.background = new THREE.Color(SCENE_COLORS.background);
     this.#scene.fog = new THREE.FogExp2(SCENE_COLORS.background, 0.038);
-    this.#camera.position.set(0, 5.5, 9.6);
+    this.#camera.position.set(0, 7.2, 10.2);
     this.#camera.lookAt(0, 0.6, 0);
 
-    const controls = new OrbitControls(this.#camera, this.#renderer.domElement);
-    controls.target.set(0, 0.7, 0);
-    controls.enablePan = false;
-    controls.minDistance = 6;
-    controls.maxDistance = 14;
-    controls.maxPolarAngle = Math.PI * 0.48;
-    controls.update();
-
     this.addRoom();
+    this.addCasinoDetails();
     this.addTable(view);
     this.addFly();
     this.resize();
-    window.addEventListener("resize", this.#resize);
+    this.#observer.observe(host);
     this.tick();
   }
 
   destroy(): void {
     cancelAnimationFrame(this.#frame);
-    window.removeEventListener("resize", this.#resize);
+    this.#observer.disconnect();
+    this.#scene.traverse(part => {
+      if (part instanceof THREE.Mesh) {
+        part.geometry.dispose();
+        const materials = Array.isArray(part.material) ? part.material : [part.material];
+        materials.forEach(material => {
+          if (material instanceof THREE.MeshStandardMaterial) material.map?.dispose();
+          material.dispose();
+        });
+      }
+    });
     this.#renderer.dispose();
     this.#host.replaceChildren();
   }
@@ -107,7 +111,7 @@ export class CasinoScene {
     this.#scene.add(signal);
   }
 
-  private addTable(view: TableView): void {
+  private addTable(_view: TableView): void {
     const pedestal = new THREE.Mesh(
       new THREE.CylinderGeometry(1.3, 1.7, 2.2, 48),
       new THREE.MeshStandardMaterial({ color: SCENE_COLORS.ink, roughness: 0.85 }),
@@ -136,42 +140,13 @@ export class CasinoScene {
     rail.castShadow = true;
     this.#scene.add(rail);
 
-    view.board.forEach((card, index) => this.addCard(card, (index - 1) * 0.72, 0.2));
-    view.playerCards.forEach((card, index) => this.addCard(card, (index - 0.5) * 0.58, 2.55));
-    this.addChips(0, -0.55, 10, SCENE_COLORS.amber);
+    
+    
+    this.addChips(1.35, -0.55, 10, SCENE_COLORS.amber);
+    this.addChips(-1.6, 1.2, 6, SCENE_COLORS.red);
+    this.addChips(-1.25, 1.25, 9, SCENE_COLORS.signal);
+    this.addChips(1.65, -1.45, 8, SCENE_COLORS.red);
     this.addChips(0.75, 2.05, 7, SCENE_COLORS.signal);
-  }
-
-  private addCard(card: Card, x: number, z: number): void {
-    const canvas = document.createElement("canvas");
-    canvas.width = 180;
-    canvas.height = 250;
-    const context = canvas.getContext("2d");
-    if (!context) return;
-    context.fillStyle = "#e4d6ad";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.strokeStyle = "#665f3a";
-    context.lineWidth = 8;
-    context.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
-    context.fillStyle = CARD_RED.has(card[1]) ? "#9d2e25" : "#1b1b11";
-    context.font = "bold 68px Georgia";
-    context.fillText(card, 22, 86);
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(0.56, 0.035, 0.78),
-      [
-        new THREE.MeshStandardMaterial({ color: SCENE_COLORS.parchment, roughness: 0.9 }),
-        new THREE.MeshStandardMaterial({ color: SCENE_COLORS.parchment, roughness: 0.9 }),
-        new THREE.MeshStandardMaterial({ map: texture, roughness: 0.9 }),
-        new THREE.MeshStandardMaterial({ color: SCENE_COLORS.olive, roughness: 0.9 }),
-        new THREE.MeshStandardMaterial({ color: SCENE_COLORS.parchment, roughness: 0.9 }),
-        new THREE.MeshStandardMaterial({ color: SCENE_COLORS.parchment, roughness: 0.9 }),
-      ],
-    );
-    mesh.position.set(x, 1.82, z);
-    mesh.castShadow = true;
-    this.#scene.add(mesh);
   }
 
   private addChips(x: number, z: number, count: number, color: number): void {
@@ -265,7 +240,7 @@ export class CasinoScene {
         part.castShadow = true;
       }
     });
-    this.#fly.position.set(-2, 2.65, -2.3);
+    this.#fly.position.set(-2.25, 2.65, -1.4);
     this.#fly.rotation.x = -0.18;
     this.#fly.scale.setScalar(1.12);
     this.#scene.add(this.#fly);
@@ -289,3 +264,4 @@ export class CasinoScene {
     this.#frame = requestAnimationFrame(this.tick);
   };
 }
+
