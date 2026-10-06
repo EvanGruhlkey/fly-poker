@@ -5,7 +5,7 @@ export function hudMarkup(view: TableView, session?: DemoSession): string {
  const finished = session?.kind === 'finished';
  const history = session?.history ?? ['Blinds posted · 0.5 / 1 BB', 'Fly checks. Your move.'];
  return `<div class="casino-app">
- <header class="site-header"><a class="brand" href="/" aria-label="Poker vs. a Fruit Fly"><img src="/assets/fly.svg" alt=""/><span>fly<span class="brand-italic">poker</span><small>A SMALL BRAIN. A BIG BLUFF.</small></span></a><div class="header-right"><span class="demo-badge"><i></i>LOCAL DEMO</span><button class="btn btn-ghost" data-info>About the experiment ↗</button><button class="btn" data-new-game>↻ New hand</button></div></header>
+ <header class="site-header"><a class="brand" href="/" aria-label="Poker vs. a Fruit Fly"><img src="/assets/fly.svg" alt=""/><span>fly<span class="brand-italic">poker</span><small>A SMALL BRAIN. A BIG BLUFF.</small></span></a><div class="header-right"><span class="demo-badge"><i></i>LOCAL DEMO</span><button class="btn btn-ghost" data-info aria-label="About the experiment"><span class="about-label">About the experiment ↗</span><span class="about-compact" aria-hidden="true">?</span></button><button class="btn" data-new-game>↻ New hand</button></div></header>
  <main> <div class="game-layout"><section class="table-panel" aria-label="Casino poker table"><div class="table-topline"><span><i class="status-dot"></i> THE FLY'S CLUB <b>TABLE 01</b></span><span class="mono">NO-LIMIT HOLD’EM · 0.5 / 1 BB</span></div>
  <div class="casino-stage"><div class="scene" data-scene data-phase="${view.phase}" aria-label="Interactive 3D casino with a fruit fly and poker table"></div><div class="vignette"></div>
  <div class="seat fly-seat"><img src="/assets/fly.svg" alt="Fruit fly"/><div><span>THE FLY <small>OPPONENT</small></span><strong>${view.flyStackBb} <small>BB</small></strong></div><div class="seat-status">${finished ? 'HAND COMPLETE' : session?.toCall ? 'BETS 4.25 BB' : 'CHECKS'}</div></div>
@@ -21,6 +21,7 @@ export function hudMarkup(view: TableView, session?: DemoSession): string {
  </main>
  <dialog data-about><button class="dialog-close btn" data-close aria-label="Close information">×</button><div class="eyebrow">A DIFFERENT KIND OF OPPONENT</div><h2>Poker vs. <em>a fruit fly.</em></h2><p>This is a playable visual prototype for a heads-up poker experiment. Call or raise to advance the board; fold to end a hand. Use F, C, and R, or the buttons below the table.</p><p>The fly responds with scripted calls and checks. This demo does not evaluate winning hands or connect to the project's neural backend. Cards and chip counts update locally. No money is involved.</p><p>The visual design and fly illustration are adapted from <a href="https://github.com/cesp99/fly-chess">cesp99/fly-chess</a>, under the <a href="/assets/fly-chess-LICENSE.txt">MIT license</a>.</p><button class="btn btn-primary" data-close>Back to the table</button></dialog></div>`;
 }
+
 
 
 
