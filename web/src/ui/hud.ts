@@ -1,49 +1,24 @@
-import type { TableView } from "../game/model";
-
-export function hudMarkup(view: TableView): string {
-  const actions = view.actions
-    .map((action) => `<button class="action action-${action.kind}" data-action="${action.kind}">${action.label}</button>`)
-    .join("");
-  const activity = view.activity;
-  return `
-    <div class="scene" data-scene data-phase="${view.phase}"></div>
-    <header class="topbar">
-      <div class="brand" aria-label="Poker vs. a Fruit Fly">Poker vs. a <span>Fruit Fly</span></div>
-      <div class="science">166,700 neurons <i></i> 124M synapses <i></i> MaleCNS v1.0</div>
-      <button class="text-button" data-new-game>New game</button>
-    </header>
-    <section class="fly-status panel">
-      <div class="eyebrow">The fly</div>
-      <strong>${view.flyStackBb} BB</strong>
-      <span class="thinking"><i></i> connectome online</span>
-    </section>
-    <section class="hand-history panel">
-      <div class="eyebrow">Hand ${view.handNumber}</div>
-      <div><span>Fly</span><b>raises 2.5 BB</b></div>
-      <div><span>You</span><b>call</b></div>
-      <div><span>Flop</span><b>A&spades; 9&diams; 4&clubs;</b></div>
-      <div><span>Fly</span><b>bets 4.25 BB</b></div>
-    </section>
-    <section class="activity panel">
-      <div class="panel-heading">
-        <div><div class="eyebrow">Live connectome</div><strong>${activity.simulationMs} ms decision</strong></div>
-        <button class="collapse" data-collapse aria-label="Hide connectome panel">&minus;</button>
-      </div>
-      <div class="brain" aria-hidden="true">
-        <div class="brain-core"></div>
-        <span class="pulse pulse-a"></span><span class="pulse pulse-b"></span><span class="pulse pulse-c"></span>
-      </div>
-      <div class="legend"><span><i class="cyan"></i>sensory in</span><span><i class="gold"></i>central</span><span><i class="red"></i>motor out</span></div>
-      <div class="stats">
-        <div><b>${activity.neuronsFired.toLocaleString()}</b><span>neurons fired</span></div>
-        <div><b>${activity.spikes.toLocaleString()}</b><span>spikes</span></div>
-        <div><b>${activity.motorSpikes.toLocaleString()}</b><span>motor spikes</span></div>
-      </div>
-      <p>Every candidate action runs through the fixed connectome. Only the action readout learns.</p>
-    </section>
-    <div class="pot-label"><span>Pot</span><strong>${view.potBb} BB</strong></div>
-    <div class="player-stack">You <strong>${view.playerStackBb} BB</strong></div>
-    <nav class="actions" aria-label="Poker actions">${actions}</nav>
-    <div class="camera-help">Drag to orbit <i></i> Scroll to zoom <i></i> H hides the interface</div>
-  `;
+import type { TableView } from '../game/model';
+import type { DemoSession } from '../game/demo';
+import { cardMarkup } from './cards';
+export function hudMarkup(view: TableView, session?: DemoSession): string {
+ const finished = session?.kind === 'finished';
+ const history = session?.history ?? ['Blinds posted · 0.5 / 1 BB', 'Fly checks. Your move.'];
+ return `<div class="casino-app">
+ <header class="site-header"><a class="brand" href="/" aria-label="Poker vs. a Fruit Fly"><img src="/assets/fly.svg" alt=""/><span>fly<span class="brand-italic">poker</span><small>A SMALL BRAIN. A BIG BLUFF.</small></span></a><div class="header-right"><span class="demo-badge"><i></i>LOCAL DEMO</span><button class="btn btn-ghost" data-info>About the experiment ↗</button><button class="btn" data-new-game>↻ New hand</button></div></header>
+ <main><section class="intro"><div><div class="eyebrow">THE SMALLEST OPPONENT AT THE TABLE</div><h1>Heads up against <em>a fruit fly.</em></h1><p>Two players. One table. A very different kind of poker face.</p></div><div class="intro-note"><span class="status-dot"></span> Pull up a chair.<small>No money. Just curiosity.</small></div></section>
+ <div class="game-layout"><section class="table-panel" aria-label="Casino poker table"><div class="table-topline"><span><i class="status-dot"></i> THE FLY'S CLUB <b>TABLE 01</b></span><span class="mono">NO-LIMIT HOLD’EM · 0.5 / 1 BB</span></div>
+ <div class="casino-stage"><div class="scene" data-scene data-phase="${view.phase}" aria-label="Interactive 3D casino with a fruit fly and poker table"></div><div class="vignette"></div>
+ <div class="seat fly-seat"><img src="/assets/fly.svg" alt="Fruit fly"/><div><span>THE FLY <small>OPPONENT</small></span><strong>${view.flyStackBb} <small>BB</small></strong></div><div class="seat-status">${finished ? 'HAND COMPLETE' : 'CHECKS'}</div></div>
+ <div class="opponent-cards" aria-label="Opponent has two hidden cards"><span class="card-back"></span><span class="card-back"></span></div>
+ <div class="table-wordmark">FLY'S CLUB<span>EST. 2026</span></div>
+ <div class="community"><div class="pot-chip"><span>POT</span><strong>${view.potBb} <small>BB</small></strong></div><div class="board" aria-label="Community cards">${view.board.map(cardMarkup).join('')}${Array.from({length: 5-view.board.length},()=>'<span class="empty-card"></span>').join('')}</div><span class="street-label">${view.board.length === 3 ? 'THE FLOP' : view.board.length === 4 ? 'THE TURN' : 'THE RIVER'} <i>·</i> HAND ${view.handNumber.toString().padStart(2,'0')}</span></div>
+ <div class="your-hand" aria-label="Your hole cards">${view.playerCards.map(cardMarkup).join('')}</div>
+ <div class="seat player-seat"><div class="avatar">YOU</div><div><span>YOU <small>${finished ? 'HAND COMPLETE' : 'YOUR TURN'}</small></span><strong>${view.playerStackBb} <small>BB</small></strong></div><span class="dealer" title="Dealer button">D</span></div>
+ <div class="camera-help">DRAG TO LOOK AROUND <span>·</span> SCROLL TO ZOOM</div></div>
+ <div class="action-dock"><div class="turn-message" role="status"><i class="status-dot"></i><span>${session?.message ?? 'Your move. What does a fly have up its sleeve?'}</span><small>${finished ? 'DEAL AGAIN ↗' : 'TAKE YOUR TIME'}</small></div><div class="action-controls"><button class="btn fold" data-action="fold" ${finished ? 'disabled' : ''}>Fold <kbd>F</kbd></button><button class="btn call" data-action="call" ${finished ? 'disabled' : ''}>Call 4 BB <kbd>C</kbd></button><div class="raise-control"><label for="raise-amount">BET SIZE <output data-raise-value>8 BB</output></label><input id="raise-amount" data-raise-slider type="range" min="4" max="${Math.max(4,Math.floor(view.playerStackBb))}" step="1" value="8" ${finished ? 'disabled' : ''}/></div><button class="btn btn-primary" data-action="raise" ${finished ? 'disabled' : ''}>Raise <span data-raise-button>8 BB</span> <kbd>R</kbd></button></div></div></section>
+ <aside class="lab-sidebar"><section class="lab-panel"><div class="panel-heading"><h2>Inside the <em>fly.</em></h2><span class="demo-badge">DEMO</span></div><p class="panel-subtitle">A glimpse of the brain behind the bluff.</p><div class="brain-visual" aria-label="Illustrative neural activity visualization"><svg viewBox="0 0 300 160" aria-hidden="true"><defs><radialGradient id="brain-glow"><stop stop-color="#8be05a" stop-opacity=".12"/><stop offset="1" stop-color="#8be05a" stop-opacity="0"/></radialGradient></defs><ellipse cx="150" cy="80" rx="140" ry="78" fill="url(#brain-glow)"/>${Array.from({length:72},(_,i)=>{const a=i*2.39996;const r=12+Math.sqrt(i)*7;const x=150+Math.cos(a)*r*1.6;const y=78+Math.sin(a)*r*.82;return `<path d="M150 80L${x} ${y}" stroke="#8be05a" stroke-opacity=".12"/><circle cx="${x}" cy="${y}" r="${i%7===0?2.8:1.3}" fill="${i%8===0?'#e9a63a':'#8be05a'}" opacity="${.25+(i%6)*.13}"/>`}).join('')}</svg><span class="brain-caption">ILLUSTRATIVE NEURAL ACTIVITY</span></div><div class="brain-legend"><span><i></i> Sensory</span><span><i></i> Processing</span><span><i></i> Motor</span></div><div class="brain-stats"><div><strong>166,700</strong><span>neurons in reference model</span></div><div><strong>124M</strong><span>synapses in reference model</span></div></div><div class="demo-notice"><span class="status-dot"></span><p><b>Local table demo</b><br/>This table uses scripted actions. The connectome backend is not connected to this view.</p></div><button class="btn btn-ghost learn-button" data-info>How the experiment works <span>↗</span></button></section>
+ <section class="lab-panel history-panel"><div class="panel-heading"><h2>At the table</h2><span class="mono">HAND ${view.handNumber.toString().padStart(2,'0')}</span></div><ol class="history">${history.slice(-6).map((entry,i)=>`<li><span class="history-index">${(i+1).toString().padStart(2,'0')}</span><span>${entry}</span></li>`).join('')}</ol><div class="table-rules"><span>Heads-up</span><span>100 BB starting stacks</span></div></section></aside></div>
+ <footer><span>BUILT FOR CURIOSITY. PLAYED IN BIG BLINDS.</span><a href="https://github.com/cesp99/fly-chess" target="_blank" rel="noreferrer">Inspired by flychess ↗</a><span>THE HOUSE DOESN’T TAKE A CUT.</span></footer></main>
+ <dialog data-about><button class="dialog-close btn" data-close aria-label="Close information">×</button><div class="eyebrow">A DIFFERENT KIND OF OPPONENT</div><h2>Poker vs. <em>a fruit fly.</em></h2><p>This is a playable visual prototype for a heads-up poker experiment. Call or raise to advance the board; fold to end a hand. Use F, C, and R, or the buttons below the table.</p><p>The fly responds with scripted calls and checks. This demo does not evaluate winning hands or connect to the project's neural backend. Cards and chip counts update locally. No money is involved.</p><p>The visual design and fly illustration are adapted from <a href="https://github.com/cesp99/fly-chess">cesp99/fly-chess</a>, under the <a href="/assets/fly-chess-LICENSE.txt">MIT license</a>.</p><button class="btn btn-primary" data-close>Back to the table</button></dialog></div>`;
 }
