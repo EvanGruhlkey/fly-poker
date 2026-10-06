@@ -109,7 +109,7 @@ export class CasinoScene {
       box(.055,.9,.055,x,3.2,-6.15,brass);
       const bulb = new THREE.PointLight(0xffb84f,8,6,2); bulb.position.set(x,3.5,-5.5); this.#scene.add(bulb);
     }
-    for (const side of [-1, 1]) {
+    for (const side of [-1]) {
       const z = side * 3.4;
       const seat = new THREE.Mesh(new THREE.CylinderGeometry(.7,.7,.3,32),leather);
       seat.position.set(0,1.25,z); seat.castShadow = true; this.#scene.add(seat);
