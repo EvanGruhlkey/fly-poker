@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { ChipStacks } from './ChipStacks';
+import type { ChipTransfer } from '../game/chips';
 
 
 import type { SceneQuality, TablePhase, TableView } from "../game/model";
@@ -26,6 +28,7 @@ const WING_SPEED_BY_PHASE: Record<TablePhase, number> = {
 
 export class CasinoScene {
   readonly #host: HTMLElement;
+  readonly #chips: ChipStacks;
   readonly #renderer: THREE.WebGLRenderer;
   readonly #scene = new THREE.Scene();
   readonly #camera = new THREE.PerspectiveCamera(38, 1, 0.1, 80);
@@ -57,14 +60,19 @@ export class CasinoScene {
     this.addTable(view);
     this.addCasinoDetails();
     this.addFly();
+    this.#chips = new ChipStacks(this.#scene,view);
     this.resize();
     this.#observer.observe(host);
     this.tick();
   }
 
+  update(view: TableView): void { this.#chips.update(view); }
+  animate(stages: readonly (readonly ChipTransfer[])[]): Promise<boolean> { return this.#chips.animate(stages); }
+  cancelAnimation(): void { this.#chips.cancel(); }
   destroy(): void {
     cancelAnimationFrame(this.#frame);
     this.#observer.disconnect();
+    this.#chips.destroy();
     this.#scene.traverse(part => {
       if (part instanceof THREE.Mesh) {
         part.geometry.dispose();
@@ -192,32 +200,6 @@ export class CasinoScene {
     rail.position.y = 1.72;
     rail.castShadow = true;
     this.#scene.add(rail);
-
-    
-    
-    this.addChips(1.35, -0.55, 10, SCENE_COLORS.amber);
-    this.addChips(-1.6, 1.2, 6, SCENE_COLORS.red);
-    this.addChips(-1.25, 1.25, 9, SCENE_COLORS.signal);
-    this.addChips(1.65, -1.45, 8, SCENE_COLORS.red);
-    this.addChips(0.75, 2.05, 7, SCENE_COLORS.signal);
-  }
-
-  private addChips(x: number, z: number, count: number, color: number): void {
-    const material = new THREE.MeshStandardMaterial({ color, roughness: 0.82 });
-    for (let index = 0; index < count; index += 1) {
-      const chip = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.045, 24), material);
-      chip.position.set(x, 1.82 + index * 0.045, z);
-      chip.castShadow = true;
-      this.#scene.add(chip);
-      const rim = new THREE.Mesh(new THREE.TorusGeometry(.15,.009,4,24),new THREE.MeshStandardMaterial({color:0xf1e9cf,roughness:.8}));
-      rim.rotation.x = Math.PI/2; rim.position.set(x,1.845+index*.045,z); this.#scene.add(rim);
-      for(let edge=0;edge<6;edge++) {
-        const angle=edge*Math.PI/3;
-        const stripe=new THREE.Mesh(new THREE.BoxGeometry(.07,.043,.017),new THREE.MeshStandardMaterial({color:0xeee5ca,roughness:.8}));
-        stripe.position.set(x+Math.cos(angle)*.194,1.82+index*.045,z+Math.sin(angle)*.194);
-        stripe.rotation.y=-angle+Math.PI/2; this.#scene.add(stripe);
-      }
-    }
   }
 
   private addFly(): void {
@@ -301,7 +283,7 @@ export class CasinoScene {
         part.castShadow = true;
       }
     });
-    this.#fly.position.set(-2.25, 2.65, -1.4);
+    this.#fly.position.set(0, 2.65, -1.65);
     this.#fly.rotation.x = -0.18;
     this.#fly.scale.setScalar(1.12);
     this.#scene.add(this.#fly);
@@ -328,6 +310,7 @@ export class CasinoScene {
     this.#frame = requestAnimationFrame(this.tick);
   };
 }
+
 
 
 
