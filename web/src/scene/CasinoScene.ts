@@ -54,8 +54,8 @@ export class CasinoScene {
     this.#camera.lookAt(0, 1.5, 0);
 
     this.addRoom();
-    this.addCasinoDetails();
     this.addTable(view);
+    this.addCasinoDetails();
     this.addFly();
     this.resize();
     this.#observer.observe(host);
@@ -325,6 +325,7 @@ export class CasinoScene {
     this.#frame = requestAnimationFrame(this.tick);
   };
 }
+
 
 
 
