@@ -14,7 +14,7 @@ function ledger(before:{player:number;fly:number;pot:number},transition:Transiti
  expect(accounts.player+accounts.fly+accounts.pot).toBe(800);
 }
 describe('complete poker matches',()=>{
- it('splits a royal-board-equivalent tie and returns both buy-ins',()=>{
+ it('splits a straight-flush board tie and returns both buy-ins',()=>{
   let state=startHand({deck:rig(['2C','3D','4H','5S','6C','7H','8H','9H','AC','TH','AD','JH'])}).state;
   while(state.kind==='betting')state=play(state,legalActions(state).canCheck?{kind:'check'}:{kind:'call'}).state;
   expect(state.result.winner).toBe('split');expect(state.result.label).toBe('Straight flush');
@@ -59,3 +59,4 @@ describe('complete poker matches',()=>{
   }
  });
 });
+

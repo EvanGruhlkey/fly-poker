@@ -12,6 +12,10 @@ describe('best five-card poker hand',()=>{
   [['AC','AD','KH','QS','JC','8D','2H'],'One pair'],
   [['AC','KD','QH','9S','7C','4D','2H'],'High card'],
  ] as const)('recognizes %s as %s',(cards,name)=>{expect(evaluate(cards).label).toBe(name);});
+ it('rejects duplicate cards and ranks a wheel straight flush correctly',()=>{
+  expect(()=>evaluate(['AS','AS','KS','QS','JS'])).toThrow();
+  expect(evaluate(['AS','2S','3S','4S','5S','KD','QH']).score).toEqual([8,5]);
+ });
  it('uses six-high to beat the wheel',()=>{
   expect(compareHands(evaluate(['AC','2D','3H','4S','5C','KD','QH']),evaluate(['2C','3D','4H','5S','6C','KD','QH']))).toBeLessThan(0);
  });
@@ -23,3 +27,4 @@ describe('best five-card poker hand',()=>{
   expect(compareHands(evaluate(['AC','KD','QH','JS','TC','2D','3H']),evaluate(['AH','KS','QC','JD','TH','4D','5H']))).toBe(0);
  });
 });
+

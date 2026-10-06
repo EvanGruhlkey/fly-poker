@@ -36,6 +36,20 @@ describe('heads-up Hold’em',()=>{
   expect(transition.effects.filter(effect=>effect.kind==='deal').map(effect=>effect.kind==='deal'&&effect.board.length)).toEqual([3,4,5]);
   expect(transition.state.kind).toBe('complete');expect(total(transition.state)).toBe(800);
  });
+ it('allows a short opening all-in without reducing the full minimum increment',()=>{
+  let state=startHand({stacks:{player:794,fly:6}}).state;
+  state=play(state,{kind:'call'}).state;state=play(state,{kind:'check'}).state;
+  state=play(state,{kind:'all-in'}).state;
+  expect(state.kind==='betting'&&state.lastFullRaise).toBe(4);expect(legalActions(state).call).toBe(2);
+  expect(legalActions(state).raise.kind).toBe('none');
+  state=play(state,{kind:'call'}).state;expect(state.kind).toBe('complete');expect(total(state)).toBe(800);
+ });
+ it('runs out a hand when a blind consumes the shorter stack',()=>{
+  const transition=startHand({stacks:{player:1,fly:799}});
+  expect(transition.state.kind).toBe('complete');expect(transition.state.board).toHaveLength(5);
+  expect(total(transition.state)).toBe(800);
+  expect(transition.effects.some(effect=>effect.kind==='chips'&&effect.moves.some(move=>move.from==='pot'&&move.to==='fly'&&move.amountBb===.75))).toBe(true);
+ });
  it('folds award once and next hands carry balances with an alternating button',()=>{
   const folded=play(startHand({}).state,{kind:'fold'}).state;
   expect(folded.stacks).toEqual({player:398,fly:402});expect(folded.pot).toBe(0);
@@ -44,3 +58,4 @@ describe('heads-up Hold’em',()=>{
   expect(next.dealer).toBe('fly');expect(next.handNumber).toBe(2);expect(total(next)).toBe(800);
  });
 });
+
