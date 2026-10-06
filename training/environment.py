@@ -108,8 +108,8 @@ class Holdem:
             raise ValueError('terminal hands have no private observation')
         state = self._state
         actor = state.actor_index
-        return Observation(tuple(str(card) for card in state.hole_cards[actor]),
-            tuple(str(cards[0]) for cards in state.board_cards), state.street_index,
+        return Observation(tuple(repr(card) for card in state.hole_cards[actor]),
+            tuple(repr(cards[0]) for cards in state.board_cards), state.street_index,
             self.actor == self.dealer, self.pot, state.checking_or_calling_amount,
             state.stacks[actor], state.stacks[1 - actor], state.bets[actor], state.bets[1 - actor], self.actions())
 
@@ -130,3 +130,4 @@ class Holdem:
         if not self.terminal:
             raise ValueError('reward is defined only after final settlement')
         return (self.stacks[seat] - 400) / 4
+
