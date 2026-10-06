@@ -10,7 +10,7 @@ def benchmark(graph_path: str | None = None, *, batch: int = 8, iterations: int 
     if not 1 <= batch <= 32 or not 1 <= iterations <= 5:
         raise ValueError('benchmark is limited to five iterations and batch 32')
     start = time.monotonic()
-    torch.set_num_threads(2)
+    torch.set_num_threads(4)
     graph = load_graph(Path(graph_path)) if graph_path else tiny_graph()
     model = BrainPolicy(graph).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=.001)
@@ -35,3 +35,4 @@ def benchmark(graph_path: str | None = None, *, batch: int = 8, iterations: int 
         'sensory_weights_changed': not torch.equal(before, model.sensory.weight),
         'peak_cuda_bytes': torch.cuda.max_memory_allocated() if device.startswith('cuda') else 0,
         'synthetic': graph_path is None}
+
