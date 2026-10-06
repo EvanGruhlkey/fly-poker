@@ -7,9 +7,12 @@ from .rollout import rollout, EVAL_SEED_BASE
 def summarize(pair_means: list[float]) -> dict:
     count = len(pair_means)
     mean = float(np.mean(pair_means)) if count else None
-    half_width = 1.96 * float(np.std(pair_means, ddof=1)) / np.sqrt(count) if count >= 2 else None
-    interval = [mean - half_width, mean + half_width] if half_width is not None else None
-    return {'mean_bb_per_hand': mean, 'ci95': interval, 'paired_decks': count, 'hands': count * 2,
+    interval = None
+    if count >= 2:
+        rng = np.random.default_rng(9182)
+        resampled = rng.choice(pair_means, size=(5000, count), replace=True).mean(axis=1)
+        interval = np.quantile(resampled, [.025, .975]).tolist()
+    return {'mean_bb_per_hand': mean, 'ci95': interval, 'ci95_method': 'paired-deck percentile bootstrap; 5000 resamples', 'sample_limited': True, 'paired_decks': count, 'hands': count * 2,
         'conclusion': 'inconclusive' if interval is None or interval[0] <= 0 <= interval[1] else 'limited-sample positive' if mean > 0 else 'limited-sample negative'}
 
 

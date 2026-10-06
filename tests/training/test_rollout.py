@@ -28,3 +28,10 @@ def test_confidence_intervals_use_deck_pair_units():
     assert report['mean_bb_per_hand'] == 0 and report['hands'] == 6
     assert report['conclusion'] == 'inconclusive' and report['ci95'][0] < 0 < report['ci95'][1]
     assert summarize([1])['ci95'] is None
+
+def test_bootstrap_interval_is_reproducible_and_pair_clustered():
+    from training.evaluation import summarize
+    first = summarize([-3, -1, 0, 2, 5])
+    assert first == summarize([-3, -1, 0, 2, 5])
+    assert first['ci95_method'] == 'paired-deck percentile bootstrap; 5000 resamples'
+    assert first['ci95'][0] <= first['mean_bb_per_hand'] <= first['ci95'][1]

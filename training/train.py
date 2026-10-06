@@ -1,5 +1,6 @@
 from dataclasses import asdict, dataclass
 import json
+import time
 from pathlib import Path
 import numpy as np
 import torch
@@ -62,13 +63,16 @@ def train(graph: Graph, directory: Path, config: TrainConfig, budget: Budget,
         save_checkpoint(path, model, optimizer, rng, progress.copy(), asdict(config))
         commit()
     checkpoint()
+    remaining = max(0.0, budget.deadline - time.monotonic())
+    evaluation_reserve = min(180.0, remaining * .25) if config.eval_pairs else 0.0
+    training_budget = Budget(remaining - evaluation_reserve)
     losses = []
     exhausted = False
     try:
         while progress['warm_steps'] < config.warm_steps:
-            budget.check()
-            observations = sample_states(rng, config.batch, budget)
-            equities = [equity(obs, rng, budget=budget) for obs in observations]
+            training_budget.check()
+            observations = sample_states(rng, config.batch, training_budget)
+            equities = [equity(obs, rng, budget=training_budget) for obs in observations]
             targets = torch.tensor([heuristic(obs, probability) for obs, probability in zip(observations, equities, strict=True)], device=device)
             values = torch.tensor([2 * probability - 1 for probability in equities], device=device)
             optimizer.zero_grad(set_to_none=True)
@@ -83,13 +87,13 @@ def train(graph: Graph, directory: Path, config: TrainConfig, budget: Budget,
                 checkpoint()
                 print(json.dumps({'phase': 'warm', **progress, 'elapsed_seconds': budget.elapsed}), flush=True)
         while progress['updates'] < config.updates:
-            budget.check()
+            training_budget.check()
             copy_parameters(model, frozen)
             seeds = rng.integers(0, TRAIN_SEED_LIMIT, config.batch).tolist()
             seats = rng.integers(0, 2, config.batch).tolist()
             opponents = rng.choice(['random', 'check_call', 'equity', 'frozen'], config.batch).tolist()
-            episodes = rollout(model, frozen, rng, budget, seeds=seeds, learner_seats=seats, opponents=opponents)
-            result = train_batch(model, optimizer, episodes, budget)
+            episodes = rollout(model, frozen, rng, training_budget, seeds=seeds, learner_seats=seats, opponents=opponents)
+            result = train_batch(model, optimizer, episodes, training_budget)
             progress['updates'] += 1
             progress['hands'] += len(episodes)
             progress['decisions'] += result['decisions']
@@ -104,6 +108,8 @@ def train(graph: Graph, directory: Path, config: TrainConfig, budget: Budget,
     exhausted |= any(item['budget_exhausted'] for item in evaluations.values())
     report = {'metadata': model.metadata(), 'config': asdict(config), 'progress': progress,
         'budget_exhausted': exhausted, 'elapsed_seconds': budget.elapsed,
+        'evaluation_reserved_seconds': evaluation_reserve, 'reward_discount': 1.0,
+        'frozen_opponent': 'snapshot refreshed before every actor-critic update',
         'sensory_weights_changed': not torch.equal(initial_sensory, model.sensory.weight.detach()),
         'recent_losses': losses[-8:], 'evaluation': evaluations, 'checkpoint': str(path),
         'training_seed_domain': [0, TRAIN_SEED_LIMIT - 1], 'evaluation_seed_domain': [TRAIN_SEED_LIMIT, None],

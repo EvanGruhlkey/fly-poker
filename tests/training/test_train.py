@@ -24,3 +24,15 @@ def test_expired_budget_still_saves_initial_checkpoint(tmp_path):
     assert report['budget_exhausted']
     assert report['progress']['updates'] == 0
     assert (tmp_path / 'latest.pt').exists()
+
+def test_resume_matches_uninterrupted_update_trajectory(tmp_path):
+    graph = tiny_graph()
+    common = dict(seed=19, warm_steps=1, batch=2, eval_pairs=0)
+    train(graph, tmp_path / 'continuous', TrainConfig(**common, updates=2), Budget(30))
+    train(graph, tmp_path / 'resumed', TrainConfig(**common, updates=1), Budget(30))
+    train(graph, tmp_path / 'resumed', TrainConfig(**common, updates=2, resume=True), Budget(30))
+    original = torch.load(tmp_path / 'continuous/latest.pt', weights_only=True)['model_state']
+    resumed = torch.load(tmp_path / 'resumed/latest.pt', weights_only=True)['model_state']
+    for key in original:
+        if original[key].layout == torch.strided:
+            assert torch.equal(original[key], resumed[key])

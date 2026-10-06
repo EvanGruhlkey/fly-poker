@@ -80,7 +80,7 @@ def train_batch(model: BrainPolicy, optimizer, episodes: list[Episode], budget: 
         count = len(episode.actions)
         observations.extend(episode.observations)
         actions.extend(episode.actions)
-        targets.extend(episode.reward_bb / 100 * .99**(count - 1 - index) for index in range(count))
+        targets.extend(episode.reward_bb / 100 for index in range(count))
     if not observations:
         return {'loss': 0.0, 'decisions': 0}
     device = next(model.parameters()).device
