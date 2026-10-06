@@ -1,5 +1,5 @@
 import { mountApp } from "./app";
-import "./styles.css";
+import "./casino.css";
 
 const root = document.querySelector<HTMLElement>("#app");
 
