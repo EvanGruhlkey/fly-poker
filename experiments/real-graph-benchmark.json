@@ -1,0 +1,27 @@
+{
+  "source_commit": "ef66d47",
+  "graph_sha256": "4d63295f5e0d9b9ca7b4cf7802f975c2fc9fad87f29ee451305ccab5de02abe2",
+  "neurons": 134209,
+  "connections": 2700513,
+  "inputs": 2048,
+  "outputs": 1415,
+  "device": "cpu",
+  "batch": 8,
+  "iterations": 3,
+  "step_seconds": [
+    1.999618224999999,
+    2.2289972999999996,
+    2.3354706110000016
+  ],
+  "total_seconds": 9.187958254999998,
+  "sensory_weights_changed": true,
+  "synthetic": false,
+  "requested_cpu": 4,
+  "torch_threads": 2,
+  "environment": {
+    "python": "3.12",
+    "torch": "2.8.0",
+    "numpy": "2.3.3",
+    "memory_mib": 8192
+  }
+}

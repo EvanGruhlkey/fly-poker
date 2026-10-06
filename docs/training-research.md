@@ -41,3 +41,11 @@ Use one GPU container, explicit step and elapsed-time caps, no automatic retry l
 ## Scientific limits
 
 This is a poker network constrained by measured fruit-fly connectivity. It is a computational rate-model approximation, not a reconstruction of complete biological dynamics, and does not show that a living fly learns poker.
+
+## Measured full-graph benchmark
+
+The first Modal GPU dispatch was rejected because GPU access required a payment method. The experiment switched to CPU compute rather than adding paid access.
+
+A full-graph CPU benchmark completed on 2026-10-05. With eight observations per batch and two PyTorch threads, three forward/backward optimizer steps took 2.00, 2.23, and 2.34 seconds. Sensory adapter weights changed. The graph was the real checksum-verified release, not a synthetic test graph. See [the measured report](../experiments/real-graph-benchmark.json).
+
+At the checked rates, four physical CPU cores and 8 GiB RAM cost approximately $0.2532/hour. A 20-minute worker ceiling is approximately $0.0844 before image-build overhead. These are resource estimates, not a final invoice. Account limits and credits must still be checked before launching.
