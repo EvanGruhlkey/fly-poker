@@ -40,3 +40,18 @@ def test_variable_stack_value_target_fits_tanh_range():
     from training.rollout import normalized_reward
     assert normalized_reward(199) == .995
     assert normalized_reward(-199) == -.995
+
+
+def test_policy_sampling_is_seeded_per_hand_and_evaluation_is_paired():
+    from training.evaluation import evaluate
+    torch.manual_seed(7)
+    model=BrainPolicy(tiny_graph())
+    kwargs=dict(seeds=[2**30+3,2**30+3],learner_seats=[0,1],opponents=['random','random'])
+    first=rollout(model,model,np.random.default_rng(1),Budget(30),**kwargs)
+    second=rollout(model,model,np.random.default_rng(999),Budget(30),**kwargs)
+    assert [(item.actions,item.reward_bb) for item in first]==[(item.actions,item.reward_bb) for item in second]
+    reports=evaluate(model,model,Budget(30),seed=7,pairs=2)
+    assert reports['paired_gain_vs_random']['mean_bb_per_hand']==0
+    assert reports['paired_gain_vs_equity']['mean_bb_per_hand']==0
+    assert reports['trained_vs_random']['policy_mode']=='sampled-softmax-temperature-1'
+    assert reports['trained_vs_random']['action_counts']

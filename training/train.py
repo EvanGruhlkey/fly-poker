@@ -57,11 +57,11 @@ def train(graph: Graph, directory: Path, config: TrainConfig, budget: Budget,
     path = directory / 'latest.pt'
     if config.resume:
         restored = load_checkpoint(path, model, optimizer, rng)
-        if restored['config']['seed'] != config.seed or restored['config']['batch'] != config.batch:
-            raise ValueError('resume seed and batch must match the saved run')
+        if restored['config']['seed'] != config.seed or restored['config']['batch'] != config.batch or restored['config'].get('init_from_v2') != config.init_from_v2:
+            raise ValueError('resume seed, batch, and migration source must match the saved run')
         progress = restored['progress']
         if config.init_from_v2:
-            migrate_v2(Path(config.init_from_v2), untrained)
+            migration = migrate_v2(Path(config.init_from_v2), untrained)
         copy_parameters(model, frozen)
     else:
         save_checkpoint(directory / 'initial.pt', model, optimizer, rng, progress.copy(), asdict(config))

@@ -37,3 +37,20 @@ def test_resume_matches_uninterrupted_update_trajectory(tmp_path):
         if original[key].layout == torch.strided:
             assert torch.equal(original[key], resumed[key])
 
+
+
+def test_migrated_training_keeps_parent_and_records_new_progress(tmp_path):
+    from training.model import BrainPolicy, ModelConfig
+    old=BrainPolicy(tiny_graph(),ModelConfig(observation_features=118))
+    source=tmp_path/'v2.pt'
+    torch.save({'format':'fly-poker-checkpoint-v2','metadata':{**old.metadata(),
+        'observation_version':'cards-public-v1','action_version':'holdem-seven-v1'},
+        'model_state':old.state_dict(),'progress':{'hands':2048}},source)
+    data=source.read_bytes()
+    config=TrainConfig(seed=18,warm_steps=1,updates=1,batch=2,eval_pairs=1,init_from_v2=str(source))
+    report=train(tiny_graph(),tmp_path/'v3',config,Budget(30))
+    assert source.read_bytes()==data
+    assert report['progress']['hands']==2
+    assert report['migration']['source_progress']['hands']==2048
+    assert report['starting_policy']=='migrated-v2'
+    assert report['evaluation']['paired_gain_vs_random']['complete']

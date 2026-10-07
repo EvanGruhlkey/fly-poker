@@ -19,19 +19,19 @@ def run_smoke(device: str, seed: int, batch: int, iterations: int):
 
 
 def run_pilot(device: str, seed: int, warm_steps: int, updates: int, batch: int,
-              eval_pairs: int, wall_seconds: int, resume: bool):
+              eval_pairs: int, wall_seconds: int, resume: bool, init_from_v2: str | None = None):
     from training.budget import Budget
     from training.data import fetch, load_graph
     from training.train import TrainConfig, train
     if not 1 <= wall_seconds <= 900:
         raise ValueError('wall_seconds must be between 1 and 900')
     budget = Budget(wall_seconds)
-    config = TrainConfig(seed, warm_steps, updates, batch, eval_pairs, resume)
+    config = TrainConfig(seed, warm_steps, updates, batch, eval_pairs, resume, init_from_v2)
     config.validate()
     path = fetch(Path('/artifacts/data/full.npz'))
     volume.commit()
     try:
-        return train(load_graph(path), Path(f'/artifacts/runs/brain-v2-seed-{seed}'), config,
+        return train(load_graph(path), Path(f'/artifacts/runs/brain-v3-seed-{seed}'), config,
             budget, device=device, commit=volume.commit)
     finally:
         volume.commit()
@@ -52,21 +52,21 @@ def smoke_gpu(seed: int = 17, batch: int = 8, iterations: int = 3):
 @app.function(image=image, cpu=4, memory=8192, max_containers=1, timeout=1200,
               retries=0, volumes={'/artifacts': volume})
 def pilot(seed: int = 17, warm_steps: int = 64, updates: int = 32, batch: int = 8,
-          eval_pairs: int = 15, wall_seconds: int = 900, resume: bool = False):
-    return run_pilot('cpu', seed, warm_steps, updates, batch, eval_pairs, wall_seconds, resume)
+          eval_pairs: int = 15, wall_seconds: int = 900, resume: bool = False, init_from_v2: str | None = None):
+    return run_pilot('cpu', seed, warm_steps, updates, batch, eval_pairs, wall_seconds, resume, init_from_v2)
 
 
 @app.function(image=image, gpu='L4', cpu=2, memory=8192, max_containers=1, timeout=1200,
               retries=0, volumes={'/artifacts': volume})
 def pilot_gpu(seed: int = 17, warm_steps: int = 64, updates: int = 32, batch: int = 8,
-              eval_pairs: int = 15, wall_seconds: int = 900, resume: bool = False):
-    return run_pilot('cuda', seed, warm_steps, updates, batch, eval_pairs, wall_seconds, resume)
+              eval_pairs: int = 15, wall_seconds: int = 900, resume: bool = False, init_from_v2: str | None = None):
+    return run_pilot('cuda', seed, warm_steps, updates, batch, eval_pairs, wall_seconds, resume, init_from_v2)
 
 
 @app.local_entrypoint()
 def main(mode: str = 'smoke', seed: int = 17, batch: int = 8, iterations: int = 3,
          warm_steps: int = 64, updates: int = 32, eval_pairs: int = 15,
-         wall_seconds: int = 900, resume: bool = False, accelerator: str = 'cpu'):
+         wall_seconds: int = 900, resume: bool = False, accelerator: str = 'cpu', init_from_v2: str = ''):
     import json
     if accelerator not in ('cpu', 'gpu'):
         raise ValueError('accelerator must be cpu or gpu')
@@ -75,7 +75,7 @@ def main(mode: str = 'smoke', seed: int = 17, batch: int = 8, iterations: int = 
         result = worker.remote(seed, batch, iterations)
     elif mode == 'train':
         worker = pilot_gpu if accelerator == 'gpu' else pilot
-        result = worker.remote(seed, warm_steps, updates, batch, eval_pairs, wall_seconds, resume)
+        result = worker.remote(seed, warm_steps, updates, batch, eval_pairs, wall_seconds, resume, init_from_v2 or None)
     else:
         raise ValueError('mode must be smoke or train')
     print(json.dumps(result, indent=2))

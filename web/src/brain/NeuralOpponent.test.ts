@@ -35,6 +35,6 @@ describe('persistent local brain requests',()=>{
   await expect(load).rejects.toThrow('Checksum mismatch');
   const old=TestWorker.current;const retry=brain.retry();
   expect(old.terminated).toBe(true);TestWorker.current.respond({kind:'ready',id:2,metadata});
-  await expect(retry).resolves.toEqual(metadata);brain.destroy();
+  await expect(retry).resolves.toEqual({...metadata,observationVersion:'cards-public-v1'});brain.destroy();
  });
 });

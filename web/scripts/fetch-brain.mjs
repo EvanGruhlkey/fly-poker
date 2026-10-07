@@ -7,7 +7,7 @@ const releasedModel='https://github.com/EvanGruhlkey/fly-poker/releases/download
 const digest=data=>createHash('sha256').update(data).digest('hex');
 export async function fetchBrain(directory, url=releasedModel, pinnedHash) {
  const manifest=JSON.parse(await readFile(join(directory,'manifest.json'),'utf8'));
- if(manifest.format!=='fly-poker-brain-v2'||!Number.isInteger(manifest.bytes)||manifest.bytes<=0||manifest.bytes>40000000||
+ if(!['fly-poker-brain-v2','fly-poker-brain-v3'].includes(manifest.format)||!Number.isInteger(manifest.bytes)||manifest.bytes<=0||manifest.bytes>40000000||
     typeof manifest.sha256!=='string'||!/^[a-f0-9]{64}$/.test(manifest.sha256))throw new Error('Invalid pinned brain manifest');
  if(pinnedHash&&manifest.sha256!==pinnedHash)throw new Error('Manifest differs from the pinned published model');
  const target=join(directory,'model.bin');

@@ -7,7 +7,7 @@ def test_learned_magnitudes_and_per_neuron_leak_receive_gradients():
     torch.manual_seed(7)
     model = BrainPolicy(tiny_graph())
     assert model.leak_logit.shape == (5,)
-    inputs = torch.rand(3, 118)
+    inputs = torch.rand(3, model.config.observation_features)
     before = model.syn_gain.detach().clone()
     optimizer = torch.optim.Adam(model.parameters(), lr=.01)
     logits, values = model(inputs, torch.ones(3, 7, dtype=torch.bool))
