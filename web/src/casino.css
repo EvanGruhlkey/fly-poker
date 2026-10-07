@@ -115,5 +115,5 @@ html,body,#app{width:100%;height:100%;overflow:hidden}
 .wager{position:absolute;z-index:3;left:60%;transform:translateX(-50%);font:11px var(--sans);color:#ddd;white-space:nowrap;pointer-events:none}
 .wager:empty{display:none}
 .wager strong{margin-left:5px;font-weight:600;color:#fff}
-.fly-wager{top:41%}.player-wager{top:61%}
-@media(max-width:700px){.wager{left:65%;font-size:10px}.fly-wager{top:42%}.player-wager{top:62%}}
+.fly-wager{top:38%}.player-wager{top:61%;left:78%}
+@media(max-width:700px){.wager{left:65%;font-size:10px}.fly-wager{top:40%}.player-wager{top:62%;left:78%}}

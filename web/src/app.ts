@@ -45,7 +45,7 @@ export function mountApp(root:HTMLElement):()=>void{
    if(ticket!==generation)return false;
    if(effect.kind==='chips'){
     const move=effect.moves[0];
-    const message=move?.from==='pot'?'Awarding the pot…':move?.to==='pot'?'Collecting bets…':move?.to==='player'||move?.to==='fly'?'Returning the uncalled bet…':move?.from==='player'?'You bet…':'Fly bets…';
+    const message=move?.from==='pot'?'Awarding the pot…':move?.to==='pot'?'Collecting bets…':move?.to==='player'||move?.to==='fly'?'Returning the uncalled bet…':move?.from==='player'?'Placing your wager…':'Placing the fly’s wager…';
     display={...display,message};render();
     if(scene&&!await scene.animate([effect.moves]))return false;
     if(ticket!==generation)return false;

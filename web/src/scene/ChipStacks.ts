@@ -4,7 +4,7 @@ import { CHIP_ACCOUNTS,type ChipAccount,type ChipTransfer } from '../game/chips'
 import { chipBalances } from '../ui/pokerView';
 const POSITIONS: Record<ChipAccount, THREE.Vector3> = {
  player:new THREE.Vector3(2,1.82,1.55), fly:new THREE.Vector3(1.7,1.82,-1.65), pot:new THREE.Vector3(-1.75,1.82,-.15),
- 'player-wager':new THREE.Vector3(.75,1.82,1.1),'fly-wager':new THREE.Vector3(.75,1.82,-1.15),
+ 'player-wager':new THREE.Vector3(2.35,1.82,1.1),'fly-wager':new THREE.Vector3(.75,1.82,-1.15),
 };
 const DENOMINATIONS=[25,5,1,.25];
 export class ChipStacks {
