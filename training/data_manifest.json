@@ -1,0 +1,14 @@
+{
+  "schema": "flywire-csr-v1",
+  "url": "https://huggingface.co/cesp99/fly-chess/resolve/cad733198a14d76a35149ecbe5f68bc6efa97732/graph/full.npz",
+  "revision": "cad733198a14d76a35149ecbe5f68bc6efa97732",
+  "sha256": "4d63295f5e0d9b9ca7b4cf7802f975c2fc9fad87f29ee451305ccab5de02abe2",
+  "bytes": 39910529,
+  "neurons": 134209,
+  "connections": 2700513,
+  "inputs": 2048,
+  "outputs": 1415,
+  "license": "CC-BY-NC-4.0",
+  "source": "https://huggingface.co/cesp99/fly-chess",
+  "description": "FlyWire-derived signed CSR network distributed by fly-chess. Noncommercial use only. This is not the unused MaleCNS placeholder."
+}
