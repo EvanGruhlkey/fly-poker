@@ -50,7 +50,8 @@ def sample_states(rng: np.random.Generator, count: int, budget: Budget) -> list[
     states: list[Observation] = []
     while len(states) < count:
         budget.check()
-        env = Holdem(int(rng.integers(0, 2**30)), dealer=int(rng.integers(0, 2)))
+        buyin = int(rng.integers(4, 797))
+        env = Holdem(int(rng.integers(0, 2**30)), dealer=int(rng.integers(0, 2)), stacks=(buyin, 800-buyin))
         hand = []
         while not env.terminal:
             budget.check()

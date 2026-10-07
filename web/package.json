@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "brain:fetch": "node scripts/fetch-brain.mjs",
     "build": "tsc --noEmit && vite build",
     "test": "vitest run"
   },

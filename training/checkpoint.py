@@ -6,12 +6,12 @@ from .environment import ACTION_VERSION
 from .features import OBSERVATION_VERSION
 from .model import BrainPolicy
 
-FIXED_BUFFERS = ('adjacency', 'root_ids', 'signs', 'input_idx', 'output_idx')
+FIXED_BUFFERS = ('csr_indptr', 'csr_indices', 'root_ids', 'signs', 'input_idx', 'output_idx')
 
 
 def save_checkpoint(path: Path, model: BrainPolicy, optimizer, rng, progress: dict, config: dict):
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = {'format': 'fly-poker-checkpoint-v1', 'metadata': {**model.metadata(),
+    payload = {'format': 'fly-poker-checkpoint-v2', 'metadata': {**model.metadata(),
         'observation_version': OBSERVATION_VERSION, 'action_version': ACTION_VERSION,
         'torch_version': str(torch.__version__), 'license': 'CC-BY-NC-4.0'},
         'model_state': model.state_dict(), 'optimizer_state': optimizer.state_dict(),
@@ -38,7 +38,7 @@ def load_checkpoint(path: Path, model: BrainPolicy, optimizer, rng) -> dict:
     device = next(model.parameters()).device
     payload = torch.load(path, map_location=device, weights_only=True)
     metadata = payload['metadata']
-    if payload['format'] != 'fly-poker-checkpoint-v1' or metadata['graph_sha256'] != model.graph_sha:
+    if payload['format'] != 'fly-poker-checkpoint-v2' or metadata['graph_sha256'] != model.graph_sha:
         raise ValueError('checkpoint graph identity mismatch')
     if metadata['model'] != model.metadata()['model'] or metadata['observation_version'] != OBSERVATION_VERSION or metadata['action_version'] != ACTION_VERSION:
         raise ValueError('checkpoint model or observation/action version mismatch')
@@ -59,3 +59,4 @@ def load_checkpoint(path: Path, model: BrainPolicy, optimizer, rng) -> dict:
     if torch.cuda.is_available() and payload['cuda_rng']:
         torch.cuda.set_rng_state_all([state.cpu() for state in payload['cuda_rng']])
     return {'progress': payload['progress'], 'config': payload['config']}
+

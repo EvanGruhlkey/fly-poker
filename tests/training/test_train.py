@@ -6,14 +6,14 @@ from training.train import TrainConfig, train
 
 
 def test_bounded_training_checkpoint_and_resume(tmp_path):
-    config = TrainConfig(seed=17, warm_steps=1, updates=1, batch=2, eval_pairs=1)
+    config = TrainConfig(seed=7, warm_steps=1, updates=1, batch=2, eval_pairs=1)
     report = train(tiny_graph(), tmp_path, config, Budget(30))
     assert report['progress']['warm_steps'] == 1
     assert report['progress']['updates'] == 1
     assert report['sensory_weights_changed']
     saved = torch.load(tmp_path / 'latest.pt', weights_only=True)
     assert saved['metadata']['graph_sha256'] == 'synthetic-test-only'
-    resumed = train(tiny_graph(), tmp_path, TrainConfig(seed=17, warm_steps=1,
+    resumed = train(tiny_graph(), tmp_path, TrainConfig(seed=7, warm_steps=1,
         updates=2, batch=2, eval_pairs=0, resume=True), Budget(30))
     assert resumed['progress']['updates'] == 2
 
@@ -36,3 +36,4 @@ def test_resume_matches_uninterrupted_update_trajectory(tmp_path):
     for key in original:
         if original[key].layout == torch.strided:
             assert torch.equal(original[key], resumed[key])
+

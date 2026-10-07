@@ -31,7 +31,7 @@ def run_pilot(device: str, seed: int, warm_steps: int, updates: int, batch: int,
     path = fetch(Path('/artifacts/data/full.npz'))
     volume.commit()
     try:
-        return train(load_graph(path), Path(f'/artifacts/runs/seed-{seed}'), config,
+        return train(load_graph(path), Path(f'/artifacts/runs/brain-v2-seed-{seed}'), config,
             budget, device=device, commit=volume.commit)
     finally:
         volume.commit()
@@ -39,32 +39,32 @@ def run_pilot(device: str, seed: int, warm_steps: int, updates: int, batch: int,
 
 @app.function(image=image, cpu=4, memory=8192, max_containers=1, timeout=1200,
               retries=0, volumes={'/artifacts': volume})
-def smoke(seed: int = 7, batch: int = 8, iterations: int = 3):
+def smoke(seed: int = 17, batch: int = 8, iterations: int = 3):
     return run_smoke('cpu', seed, batch, iterations)
 
 
 @app.function(image=image, gpu='L4', cpu=2, memory=8192, max_containers=1, timeout=1200,
               retries=0, volumes={'/artifacts': volume})
-def smoke_gpu(seed: int = 7, batch: int = 8, iterations: int = 3):
+def smoke_gpu(seed: int = 17, batch: int = 8, iterations: int = 3):
     return run_smoke('cuda', seed, batch, iterations)
 
 
 @app.function(image=image, cpu=4, memory=8192, max_containers=1, timeout=1200,
               retries=0, volumes={'/artifacts': volume})
-def pilot(seed: int = 7, warm_steps: int = 64, updates: int = 32, batch: int = 8,
+def pilot(seed: int = 17, warm_steps: int = 64, updates: int = 32, batch: int = 8,
           eval_pairs: int = 15, wall_seconds: int = 900, resume: bool = False):
     return run_pilot('cpu', seed, warm_steps, updates, batch, eval_pairs, wall_seconds, resume)
 
 
 @app.function(image=image, gpu='L4', cpu=2, memory=8192, max_containers=1, timeout=1200,
               retries=0, volumes={'/artifacts': volume})
-def pilot_gpu(seed: int = 7, warm_steps: int = 64, updates: int = 32, batch: int = 8,
+def pilot_gpu(seed: int = 17, warm_steps: int = 64, updates: int = 32, batch: int = 8,
               eval_pairs: int = 15, wall_seconds: int = 900, resume: bool = False):
     return run_pilot('cuda', seed, warm_steps, updates, batch, eval_pairs, wall_seconds, resume)
 
 
 @app.local_entrypoint()
-def main(mode: str = 'smoke', seed: int = 7, batch: int = 8, iterations: int = 3,
+def main(mode: str = 'smoke', seed: int = 17, batch: int = 8, iterations: int = 3,
          warm_steps: int = 64, updates: int = 32, eval_pairs: int = 15,
          wall_seconds: int = 900, resume: bool = False, accelerator: str = 'cpu'):
     import json
