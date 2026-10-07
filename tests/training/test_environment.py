@@ -52,3 +52,10 @@ def test_many_random_hands_keep_exact_chip_conservation():
             env.step(int(rng.choice(np.flatnonzero(mask))))
         else:
             raise AssertionError('hand did not terminate')
+
+def test_unequal_buyins_preserve_total_and_net_reward():
+    env = Holdem(81, stacks=(37, 763))
+    while not env.terminal:
+        env.step(1)
+        assert sum(env.stacks) + env.pot == 800
+    assert env.reward(0) + env.reward(1) == 0

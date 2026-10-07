@@ -36,10 +36,11 @@ def infer(model: BrainPolicy, observations: list[Observation], *, greedy=False, 
 
 def rollout(model: BrainPolicy, frozen: BrainPolicy, rng: np.random.Generator,
             budget: Budget, *, seeds: list[int], learner_seats: list[int],
-            opponents: list[str], greedy=False, ablation='real') -> list[Episode]:
+            opponents: list[str], greedy=False, ablation='real', initial_stacks=None) -> list[Episode]:
     if not len(seeds) == len(learner_seats) == len(opponents):
         raise ValueError('rollout seat, seed, and opponent lengths differ')
-    envs = [Holdem(seed, dealer=0) for seed in seeds]
+    starting = initial_stacks or [(400, 400)] * len(seeds)
+    envs = [Holdem(seed, dealer=0, stacks=stacks) for seed, stacks in zip(seeds, starting, strict=True)]
     observations: list[list[Observation]] = [[] for _ in seeds]
     actions: list[list[int]] = [[] for _ in seeds]
     turns = 0

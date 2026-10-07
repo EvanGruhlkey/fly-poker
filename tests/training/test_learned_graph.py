@@ -4,6 +4,7 @@ from training.model import BrainPolicy
 
 
 def test_learned_magnitudes_and_per_neuron_leak_receive_gradients():
+    torch.manual_seed(7)
     model = BrainPolicy(tiny_graph())
     assert model.leak_logit.shape == (5,)
     inputs = torch.rand(3, 118)
@@ -32,3 +33,4 @@ def test_sparse_edge_and_state_gradients_match_dense_reference():
     dense_grad = torch.autograd.grad(dense.square().sum(), (weights, state))
     for actual, expected in zip(sparse_grad, dense_grad):
         assert torch.allclose(actual, expected, atol=1e-6)
+

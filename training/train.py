@@ -15,7 +15,7 @@ from .teacher import equity, heuristic, sample_states
 
 @dataclass(frozen=True)
 class TrainConfig:
-    seed: int = 7
+    seed: int = 17
     warm_steps: int = 64
     updates: int = 32
     batch: int = 8
@@ -46,9 +46,11 @@ def train(graph: Graph, directory: Path, config: TrainConfig, budget: Budget,
     frozen = BrainPolicy(graph).to(device)
     copy_parameters(model, untrained)
     copy_parameters(model, frozen)
+    initial_edges = model.syn_gain.detach().clone()
+    initial_leaks = model.leak_logit.detach().clone()
     initial_sensory = model.sensory.weight.detach().clone()
     optimizer = torch.optim.Adam(model.parameters(), lr=3e-4)
-    progress = {'warm_steps': 0, 'updates': 0, 'hands': 0, 'decisions': 0}
+    progress = {'warm_steps': 0, 'updates': 0, 'hands': 0, 'decisions': 0, 'self_play_hands': 0}
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / 'latest.pt'
     if config.resume:
@@ -91,11 +93,13 @@ def train(graph: Graph, directory: Path, config: TrainConfig, budget: Budget,
             copy_parameters(model, frozen)
             seeds = rng.integers(0, TRAIN_SEED_LIMIT, config.batch).tolist()
             seats = rng.integers(0, 2, config.batch).tolist()
-            opponents = rng.choice(['random', 'check_call', 'equity', 'frozen'], config.batch).tolist()
-            episodes = rollout(model, frozen, rng, training_budget, seeds=seeds, learner_seats=seats, opponents=opponents)
+            opponents = rng.choice(['random', 'check_call', 'equity', 'frozen', 'frozen', 'frozen'], config.batch).tolist()
+            buyins = rng.integers(4, 797, config.batch).tolist()
+            episodes = rollout(model, frozen, rng, training_budget, seeds=seeds, learner_seats=seats, opponents=opponents, initial_stacks=[(buyin, 800-buyin) for buyin in buyins])
             result = train_batch(model, optimizer, episodes, training_budget)
             progress['updates'] += 1
             progress['hands'] += len(episodes)
+            progress['self_play_hands'] += opponents.count('frozen')
             progress['decisions'] += result['decisions']
             losses.append(result['loss'])
             if progress['updates'] % 4 == 0:
@@ -110,10 +114,15 @@ def train(graph: Graph, directory: Path, config: TrainConfig, budget: Budget,
         'budget_exhausted': exhausted, 'elapsed_seconds': budget.elapsed,
         'evaluation_reserved_seconds': evaluation_reserve, 'reward_discount': 1.0,
         'frozen_opponent': 'snapshot refreshed before every actor-critic update',
+        'device': str(device), 'gpu_name': torch.cuda.get_device_name() if str(device).startswith('cuda') else None,
+        'edge_magnitudes_changed': not torch.equal(initial_edges, model.syn_gain.detach()),
+        'neuron_leaks_changed': not torch.equal(initial_leaks, model.leak_logit.detach()),
+        'fixed_signs_preserved': torch.equal(model.edge_weights().sign().to(torch.int8), model.signs),
+        'parameters_finite': all(torch.isfinite(parameter).all().item() for parameter in model.parameters()),
         'sensory_weights_changed': not torch.equal(initial_sensory, model.sensory.weight.detach()),
         'recent_losses': losses[-8:], 'evaluation': evaluations, 'checkpoint': str(path),
         'training_seed_domain': [0, TRAIN_SEED_LIMIT - 1], 'evaluation_seed_domain': [TRAIN_SEED_LIMIT, None],
-        'interpretation': 'Fixed signed connectome rate approximation with trained adapters; pilot results do not establish poker strength.'}
+        'interpretation': 'Fixed connectome topology/signs with learned edge magnitudes, neuron leaks, and adapters; pilot results do not establish poker strength.'}
     (directory / 'metrics.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
     commit()
     return report

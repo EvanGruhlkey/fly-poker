@@ -1,0 +1,6 @@
+Upstream model dynamics, initialization and sparse-gradient design adapted from
+cesp99/fly-chess, revision 3c83567, https://github.com/cesp99/fly-chess .
+The original MIT license is retained in fly-chess-LICENSE.txt.
+This poker implementation uses independently implemented CSR multiply/sampled
+edge gradients and omits retina, neuromodulation, chess search and move encoding.
+Graph data remains separately licensed CC BY-NC 4.0 as pinned in data_manifest.json.

@@ -32,15 +32,18 @@ class Observation:
 
 
 class Holdem:
-    def __init__(self, seed: int, dealer: int = 0):
+    def __init__(self, seed: int, dealer: int = 0, stacks: tuple[int, int] = (400, 400)):
         if dealer not in (0, 1):
             raise ValueError('dealer must be 0 or 1')
+        if any(not isinstance(chips, int) or chips <= 0 for chips in stacks) or sum(stacks) != 800:
+            raise ValueError('positive buyins must conserve 800 quarter-BB chips')
+        self._starting_stacks = stacks
         self.dealer = dealer
         self._seats = (1 - dealer, dealer)
         self._deck = [rank + suit for rank in '23456789TJQKA' for suit in 'cdhs']
         Random(seed).shuffle(self._deck)
         self._cursor = 0
-        self._state = NoLimitTexasHoldem.create_state(AUTOMATIONS, False, 0, (2, 4), 4, (400, 400), 2)
+        self._state = NoLimitTexasHoldem.create_state(AUTOMATIONS, False, 0, (2, 4), 4, tuple(stacks[seat] for seat in self._seats), 2)
         while self._state.can_deal_hole():
             self._state.deal_hole(self._draw(1))
         self._advance()
@@ -129,5 +132,5 @@ class Holdem:
     def reward(self, seat: int) -> float:
         if not self.terminal:
             raise ValueError('reward is defined only after final settlement')
-        return (self.stacks[seat] - 400) / 4
+        return (self.stacks[seat] - self._starting_stacks[seat]) / 4
 
