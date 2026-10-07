@@ -1,0 +1,143 @@
+{
+  "metadata": {
+    "model": {
+      "steps": 8,
+      "gain": 1.0,
+      "saturation": 10.0,
+      "observation_features": 118,
+      "action_count": 7,
+      "approximation": "signed-learned-saturating-rate-v2"
+    },
+    "graph_sha256": "4d63295f5e0d9b9ca7b4cf7802f975c2fc9fad87f29ee451305ccab5de02abe2",
+    "neurons": 134209,
+    "connections": 2700513,
+    "inputs": 2048,
+    "outputs": 1415
+  },
+  "config": {
+    "seed": 17,
+    "warm_steps": 256,
+    "updates": 256,
+    "batch": 8,
+    "eval_pairs": 50,
+    "resume": true
+  },
+  "progress": {
+    "warm_steps": 256,
+    "updates": 256,
+    "hands": 2048,
+    "decisions": 6418,
+    "self_play_hands": 1018
+  },
+  "device": "cuda",
+  "gpu_name": "NVIDIA L4",
+  "edge_magnitudes_changed": true,
+  "neuron_leaks_changed": true,
+  "fixed_signs_preserved": true,
+  "parameters_finite": true,
+  "resumed_worker_elapsed_seconds": 726.19807417,
+  "evaluation": {
+    "trained_vs_random": {
+      "mean_bb_per_hand": 10.665,
+      "ci95": [
+        0.5148750000000001,
+        21.290124999999996
+      ],
+      "ci95_method": "paired-deck percentile bootstrap; 5000 resamples",
+      "sample_limited": true,
+      "paired_decks": 50,
+      "hands": 100,
+      "conclusion": "limited-sample positive",
+      "complete": true
+    },
+    "trained_vs_check_call": {
+      "mean_bb_per_hand": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "ci95_method": "paired-deck percentile bootstrap; 5000 resamples",
+      "sample_limited": true,
+      "paired_decks": 50,
+      "hands": 100,
+      "conclusion": "inconclusive",
+      "complete": true
+    },
+    "trained_vs_equity": {
+      "mean_bb_per_hand": -14.465,
+      "ci95": [
+        -23.735,
+        -5.164500000000007
+      ],
+      "ci95_method": "paired-deck percentile bootstrap; 5000 resamples",
+      "sample_limited": true,
+      "paired_decks": 50,
+      "hands": 100,
+      "conclusion": "limited-sample negative",
+      "complete": true
+    },
+    "zero_edges_vs_random": {
+      "mean_bb_per_hand": -3.475,
+      "ci95": [
+        -11.245874999999998,
+        4.5552499999999965
+      ],
+      "ci95_method": "paired-deck percentile bootstrap; 5000 resamples",
+      "sample_limited": true,
+      "paired_decks": 50,
+      "hands": 100,
+      "conclusion": "inconclusive",
+      "complete": true
+    },
+    "shuffled_wiring_vs_random": {
+      "mean_bb_per_hand": 6.715,
+      "ci95": [
+        -2.1502499999999998,
+        15.671249999999981
+      ],
+      "ci95_method": "paired-deck percentile bootstrap; 5000 resamples",
+      "sample_limited": true,
+      "paired_decks": 50,
+      "hands": 100,
+      "conclusion": "inconclusive",
+      "complete": true
+    },
+    "untrained_vs_random": {
+      "mean_bb_per_hand": 3.565,
+      "ci95": [
+        -6.290125,
+        13.54062499999999
+      ],
+      "ci95_method": "paired-deck percentile bootstrap; 5000 resamples",
+      "sample_limited": true,
+      "paired_decks": 50,
+      "hands": 100,
+      "conclusion": "inconclusive",
+      "complete": true
+    }
+  },
+  "artifact": {
+    "release": "https://github.com/EvanGruhlkey/fly-poker/releases/tag/brain-v2-seed17",
+    "sha256": "d8caa3f93b8a126b1b5b421ab04f695d8f7681bf603337b8139c23caf487bcda",
+    "bytes": 35062000
+  },
+  "verification": {
+    "changed_edge_gains": 2226210,
+    "changed_neuron_leaks": 89949,
+    "python_browser_vectors": 12,
+    "max_logit_absolute_error": 7.152557373046875e-07,
+    "max_value_absolute_error": 1.9906941753355945e-07,
+    "browser_worker_inference_ms_range": [
+      72,
+      88
+    ],
+    "python_tests": 47,
+    "web_tests": 35,
+    "production_build": "passed"
+  },
+  "limitations": [
+    "Small evaluation does not establish strong poker play.",
+    "Acute graph interventions do not establish a topology advantage.",
+    "Rate-model approximation; not a living fly or poker solver."
+  ]
+}
