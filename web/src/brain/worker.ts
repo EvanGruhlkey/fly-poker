@@ -11,7 +11,8 @@ self.onmessage=async(event:MessageEvent<BrainRequest>)=>{
    if(!response.ok)throw new Error('Trained brain manifest is unavailable. Install the released model assets and retry.');
    const manifest:unknown=await response.json();
    if(!manifest||typeof manifest!=='object'||!('sha256' in manifest)||typeof manifest.sha256!=='string')throw new Error('Invalid brain manifest');
-   const binaryResponse=await fetch(new URL('model.bin',new URL(request.manifestUrl,self.location.href)),{cache:'force-cache'});
+   const binaryUrl=new URL('model.bin',new URL(request.manifestUrl,self.location.href));binaryUrl.searchParams.set('sha256',manifest.sha256);
+   const binaryResponse=await fetch(binaryUrl,{cache:'force-cache'});
    if(!binaryResponse.ok)throw new Error('Trained brain weights are unavailable.');
    const buffer=await binaryResponse.arrayBuffer();
    const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',buffer)),x=>x.toString(16).padStart(2,'0')).join('');

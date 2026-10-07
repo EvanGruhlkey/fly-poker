@@ -9,7 +9,7 @@ describe('real poker interface',()=>{
   const state=startHand({deck:orderedDeck()}).state;const markup=pokerMarkup(state,presentation(state));
   expect(markup).toContain('Call 0.5 BB');expect(markup).toContain('3 of clubs');expect(markup).toContain('5 of clubs');
   expect(markup).not.toContain('/assets/cards/2C.svg');expect(markup).not.toContain('/assets/cards/4C.svg');
-  expect(markup).toContain('min="8"');expect(markup).toContain('data-action="all-in"');expect(markup).toContain('The neural backend is not connected');
+  expect(markup).toContain('min="8"');expect(markup).toContain('data-action="all-in"');expect(markup).toContain('no turn data is sent to a server');expect(markup).toContain('data-brain-state="loading"');
  });
  it('offers the next hand after a fold without revealing the fly cards',()=>{
   const state=play(startHand({deck:orderedDeck()}).state,{kind:'fold'}).state;const markup=pokerMarkup(state,presentation(state));
