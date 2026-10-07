@@ -1,6 +1,6 @@
 export interface BrainMetadata {
  readonly modelHash:string;readonly graphHash:string;readonly neurons:number;readonly connections:number;
- readonly warmSteps:number;readonly updates:number;readonly seed:number;
+ readonly observationVersion?:string;readonly warmSteps:number;readonly updates:number;readonly seed:number;
 }
 export type BrainStatus={readonly kind:'loading'}|{readonly kind:'ready';readonly metadata:BrainMetadata}|{readonly kind:'error';readonly message:string};
 export type BrainRequest={readonly kind:'load';readonly id:number;readonly manifestUrl:string}|{readonly kind:'infer';readonly id:number;readonly features:Float32Array;readonly mask:readonly boolean[]};
@@ -16,7 +16,7 @@ export function parseResponse(value:unknown):BrainResponse {
   if('modelHash' in m&&typeof m.modelHash==='string'&&'graphHash' in m&&typeof m.graphHash==='string'&&
    'neurons' in m&&typeof m.neurons==='number'&&'connections' in m&&typeof m.connections==='number'&&
    'warmSteps' in m&&typeof m.warmSteps==='number'&&'updates' in m&&typeof m.updates==='number'&&'seed' in m&&typeof m.seed==='number')
-   return {kind:'ready',id:value.id,metadata:{modelHash:m.modelHash,graphHash:m.graphHash,neurons:m.neurons,connections:m.connections,warmSteps:m.warmSteps,updates:m.updates,seed:m.seed}};
+   return {kind:'ready',id:value.id,metadata:{observationVersion:'observationVersion' in m&&typeof m.observationVersion==='string'?m.observationVersion:'cards-public-v1',modelHash:m.modelHash,graphHash:m.graphHash,neurons:m.neurons,connections:m.connections,warmSteps:m.warmSteps,updates:m.updates,seed:m.seed}};
  }
  throw new Error('Invalid brain worker reply');
 }

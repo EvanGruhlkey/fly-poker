@@ -23,7 +23,7 @@ self.onmessage=async(event:MessageEvent<BrainRequest>)=>{
    if(m.graph_sha256!==graphHash||m.neurons!==134209||m.connections!==2700513||
       !m.progress?.warm_steps||!m.progress?.updates||!Number.isInteger(m.training_config?.seed))throw new Error('This is not the trained full-connectome poker model.');
    model=loaded;
-   reply({kind:'ready',id:request.id,metadata:{modelHash:hash,graphHash:m.graph_sha256,neurons:m.neurons,connections:m.connections,
+   reply({kind:'ready',id:request.id,metadata:{observationVersion:m.observation_version,modelHash:hash,graphHash:m.graph_sha256,neurons:m.neurons,connections:m.connections,
     warmSteps:m.progress.warm_steps,updates:m.progress.updates,seed:m.training_config.seed}});
   }else{
    if(!model)throw new Error('Trained brain is not loaded.');

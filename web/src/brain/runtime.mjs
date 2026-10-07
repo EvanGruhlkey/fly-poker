@@ -3,17 +3,19 @@ const integer = value => Number.isSafeInteger(value) && value >= 0;
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 export function parseModel(manifest, buffer) {
-  if (!object(manifest) || manifest.format !== 'fly-poker-brain-v2' ||
-      manifest.observation_version !== 'cards-public-v1' || manifest.action_version !== 'holdem-seven-v1' ||
+  const featureCount=manifest?.model?.observation_features;
+  const compatible=manifest?.format==='fly-poker-brain-v2' && manifest.observation_version==='cards-public-v1' && featureCount===118 ||
+    manifest?.format==='fly-poker-brain-v3' && manifest.observation_version==='cards-history-v2' && featureCount===250;
+  if (!object(manifest) || !compatible || manifest.action_version !== 'holdem-seven-v1' ||
       !object(manifest.model) || manifest.model.approximation !== 'signed-learned-saturating-rate-v2' ||
       !object(manifest.tensors) || manifest.bytes !== buffer.byteLength) fail('Incompatible brain export');
   const {neurons:n, connections:e, inputs:ni, outputs:no} = manifest;
   if (![n,e,ni,no].every(integer) || !n || !e || !ni || !no || n > 200000 || e > 4000000 ||
-      ni > n || no > n || manifest.model.steps !== 8 || manifest.model.observation_features !== 118 ||
+      ni > n || no > n || manifest.model.steps !== 8 || ![118,250].includes(featureCount) ||
       manifest.model.action_count !== 7 || !(manifest.model.saturation > 0) ||
       manifest.layer_norm_epsilon !== 1e-5) fail('Invalid brain dimensions');
   const shapes = {csr_indptr:[n+1],csr_indices:[e],input_idx:[ni],output_idx:[no],signs:[e],
-    weights:[e],leak:[n],bias:[n],'sensory.weight':[ni,118],'sensory.bias':[ni],
+    weights:[e],leak:[n],bias:[n],'sensory.weight':[ni,featureCount],'sensory.bias':[ni],
     'motor_norm.weight':[no],'motor_norm.bias':[no],'policy.weight':[7,no],
     'policy.bias':[7],'value.weight':[1,no],'value.bias':[1]};
   const arrays = {};
@@ -51,7 +53,7 @@ function linear(weights, bias, input) {
 }
 
 export function forward(model, features, mask) {
-  if (features.length!==118 || !features.every(Number.isFinite) || mask.length!==7 ||
+  if (features.length!==model.manifest.model.observation_features || !features.every(Number.isFinite) || mask.length!==7 ||
       !mask.every(x=>typeof x==='boolean') || !mask.some(Boolean)) fail('Invalid private observation');
   const {arrays:a, manifest:m} = model;
   const sensory = linear(a['sensory.weight'], a['sensory.bias'], features);

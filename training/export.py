@@ -7,7 +7,7 @@ from .environment import ACTION_VERSION
 from .features import OBSERVATION_VERSION
 from .model import BrainPolicy
 
-EXPORT_VERSION = 'fly-poker-brain-v2'
+EXPORT_VERSION = 'fly-poker-brain-v3'
 
 
 def export_model(model: BrainPolicy, directory: Path, *, progress=None, config=None) -> dict:
@@ -55,7 +55,7 @@ def export_checkpoint(graph_path: Path, checkpoint_path: Path, directory: Path):
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description='Export a validated v2 checkpoint for local browser inference')
+    parser = argparse.ArgumentParser(description='Export a validated v3 checkpoint for local browser inference')
     parser.add_argument('--graph', type=Path, required=True)
     parser.add_argument('--checkpoint', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)

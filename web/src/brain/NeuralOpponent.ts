@@ -28,7 +28,7 @@ export class NeuralOpponent {
   });return this.ready;
  }
  async choose(view:BrainObservation):Promise<{action:PokerAction;inferenceMs:number}>{
-  await this.load();const input=brainInput(view);
+  const metadata=await this.load();const input=brainInput(view,metadata.observationVersion);
   const response=await this.request({kind:'infer',id:++this.serial,features:input.features,mask:input.mask});
   if(response.kind!=='result')throw new Error('Brain did not produce an action');
   const action=input.actions[response.index];if(!action)throw new Error('Brain selected an illegal action');

@@ -11,7 +11,7 @@ FIXED_BUFFERS = ('csr_indptr', 'csr_indices', 'root_ids', 'signs', 'input_idx', 
 
 def save_checkpoint(path: Path, model: BrainPolicy, optimizer, rng, progress: dict, config: dict):
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = {'format': 'fly-poker-checkpoint-v2', 'metadata': {**model.metadata(),
+    payload = {'format': 'fly-poker-checkpoint-v3', 'metadata': {**model.metadata(),
         'observation_version': OBSERVATION_VERSION, 'action_version': ACTION_VERSION,
         'torch_version': str(torch.__version__), 'license': 'CC-BY-NC-4.0'},
         'model_state': model.state_dict(), 'optimizer_state': optimizer.state_dict(),
@@ -38,7 +38,7 @@ def load_checkpoint(path: Path, model: BrainPolicy, optimizer, rng) -> dict:
     device = next(model.parameters()).device
     payload = torch.load(path, map_location=device, weights_only=True)
     metadata = payload['metadata']
-    if payload['format'] != 'fly-poker-checkpoint-v2' or metadata['graph_sha256'] != model.graph_sha:
+    if payload['format'] != 'fly-poker-checkpoint-v3' or metadata['graph_sha256'] != model.graph_sha:
         raise ValueError('checkpoint graph identity mismatch')
     if metadata['model'] != model.metadata()['model'] or metadata['observation_version'] != OBSERVATION_VERSION or metadata['action_version'] != ACTION_VERSION:
         raise ValueError('checkpoint model or observation/action version mismatch')
@@ -60,3 +60,27 @@ def load_checkpoint(path: Path, model: BrainPolicy, optimizer, rng) -> dict:
         torch.cuda.set_rng_state_all([state.cpu() for state in payload['cuda_rng']])
     return {'progress': payload['progress'], 'config': payload['config']}
 
+
+
+def migrate_v2(path: Path, model: BrainPolicy) -> dict:
+    import hashlib
+    payload = torch.load(path, map_location=next(model.parameters()).device, weights_only=True)
+    metadata = payload['metadata']
+    expected = model.metadata()
+    old_config = {**expected['model'], 'observation_features': 118}
+    if payload['format'] != 'fly-poker-checkpoint-v2' or metadata['graph_sha256'] != model.graph_sha or metadata['model'] != old_config or metadata['observation_version'] != 'cards-public-v1' or metadata['action_version'] != ACTION_VERSION:
+        raise ValueError('incompatible v2 migration source')
+    state = payload['model_state']
+    current = model.state_dict()
+    if any(not torch.equal(state[key], current[key]) for key in FIXED_BUFFERS):
+        raise ValueError('migration modifies fixed connectome buffers')
+    if state['sensory.weight'].shape != (len(model.input_idx), 118):
+        raise ValueError('invalid migration sensory shape')
+    widened = torch.zeros_like(current['sensory.weight'])
+    widened[:, :118] = state['sensory.weight']
+    model.load_state_dict({**state, 'sensory.weight': widened}, strict=True)
+    if not all(torch.isfinite(parameter).all() for parameter in model.parameters()):
+        raise ValueError('non-finite migration source')
+    return {'source_sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+        'source_observation_version': 'cards-public-v1', 'source_progress': payload.get('progress', {}),
+        'optimizer_reset': True, 'history_columns': 'zero initialized'}
