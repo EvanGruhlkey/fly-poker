@@ -1,0 +1,171 @@
+{
+  "format": "fly-poker-brain-v2",
+  "binary": "model.bin",
+  "sha256": "d8caa3f93b8a126b1b5b421ab04f695d8f7681bf603337b8139c23caf487bcda",
+  "bytes": 35062000,
+  "model": {
+    "steps": 8,
+    "gain": 1.0,
+    "saturation": 10.0,
+    "observation_features": 118,
+    "action_count": 7,
+    "approximation": "signed-learned-saturating-rate-v2"
+  },
+  "graph_sha256": "4d63295f5e0d9b9ca7b4cf7802f975c2fc9fad87f29ee451305ccab5de02abe2",
+  "neurons": 134209,
+  "connections": 2700513,
+  "inputs": 2048,
+  "outputs": 1415,
+  "observation_version": "cards-public-v1",
+  "action_version": "holdem-seven-v1",
+  "license": "CC-BY-NC-4.0",
+  "layer_norm_epsilon": 1e-05,
+  "progress": {
+    "warm_steps": 256,
+    "updates": 256,
+    "hands": 2048,
+    "decisions": 6418,
+    "self_play_hands": 1018
+  },
+  "training_config": {
+    "seed": 17,
+    "warm_steps": 256,
+    "updates": 256,
+    "batch": 8,
+    "eval_pairs": 50,
+    "resume": true
+  },
+  "tensors": {
+    "csr_indptr": {
+      "offset": 0,
+      "length": 134210,
+      "shape": [
+        134210
+      ],
+      "dtype": "int32"
+    },
+    "csr_indices": {
+      "offset": 536840,
+      "length": 2700513,
+      "shape": [
+        2700513
+      ],
+      "dtype": "int32"
+    },
+    "input_idx": {
+      "offset": 11338892,
+      "length": 2048,
+      "shape": [
+        2048
+      ],
+      "dtype": "int32"
+    },
+    "output_idx": {
+      "offset": 11347084,
+      "length": 1415,
+      "shape": [
+        1415
+      ],
+      "dtype": "int32"
+    },
+    "signs": {
+      "offset": 11352744,
+      "length": 2700513,
+      "shape": [
+        2700513
+      ],
+      "dtype": "int32"
+    },
+    "weights": {
+      "offset": 22154796,
+      "length": 2700513,
+      "shape": [
+        2700513
+      ],
+      "dtype": "float32"
+    },
+    "leak": {
+      "offset": 32956848,
+      "length": 134209,
+      "shape": [
+        134209
+      ],
+      "dtype": "float32"
+    },
+    "bias": {
+      "offset": 33493684,
+      "length": 134209,
+      "shape": [
+        134209
+      ],
+      "dtype": "float32"
+    },
+    "sensory.weight": {
+      "offset": 34030520,
+      "length": 241664,
+      "shape": [
+        2048,
+        118
+      ],
+      "dtype": "float32"
+    },
+    "sensory.bias": {
+      "offset": 34997176,
+      "length": 2048,
+      "shape": [
+        2048
+      ],
+      "dtype": "float32"
+    },
+    "motor_norm.weight": {
+      "offset": 35005368,
+      "length": 1415,
+      "shape": [
+        1415
+      ],
+      "dtype": "float32"
+    },
+    "motor_norm.bias": {
+      "offset": 35011028,
+      "length": 1415,
+      "shape": [
+        1415
+      ],
+      "dtype": "float32"
+    },
+    "policy.weight": {
+      "offset": 35016688,
+      "length": 9905,
+      "shape": [
+        7,
+        1415
+      ],
+      "dtype": "float32"
+    },
+    "policy.bias": {
+      "offset": 35056308,
+      "length": 7,
+      "shape": [
+        7
+      ],
+      "dtype": "float32"
+    },
+    "value.weight": {
+      "offset": 35056336,
+      "length": 1415,
+      "shape": [
+        1,
+        1415
+      ],
+      "dtype": "float32"
+    },
+    "value.bias": {
+      "offset": 35061996,
+      "length": 1,
+      "shape": [
+        1
+      ],
+      "dtype": "float32"
+    }
+  }
+}
