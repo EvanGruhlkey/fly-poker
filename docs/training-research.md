@@ -36,7 +36,7 @@ Zeroed and shuffled graph interventions should report output changes and gamepla
 
 Set the workspace [Spend limit](https://modal.com/docs/guide/budgets) to $0. The default can allow paid usage after credits. A local elapsed-time guard alone does not enforce a free-only workspace.
 
-Use one GPU container, explicit step and elapsed-time caps, no automatic retry loop, and checkpoints on a [Modal Volume](https://modal.com/docs/examples/long-training). Run a short real-graph forward/backward benchmark before sizing the training run. Preserve model, optimizer, seed/RNG state, data hash, observation/action versions, and measured evaluation results.
+Use one compute container, explicit step and elapsed-time caps, no automatic retry loop, and checkpoints on a [Modal Volume](https://modal.com/docs/examples/long-training). Run a short real-graph forward/backward benchmark before sizing the training run. Preserve model, optimizer, seed/RNG state, data hash, observation/action versions, and measured evaluation results.
 
 ## Scientific limits
 
@@ -49,3 +49,5 @@ The first Modal GPU dispatch was rejected because GPU access required a payment 
 A full-graph CPU benchmark completed on 2026-10-05. With eight observations per batch and two PyTorch threads, three forward/backward optimizer steps took 2.00, 2.23, and 2.34 seconds. Sensory adapter weights changed. The graph was the real checksum-verified release, not a synthetic test graph. See [the measured report](../experiments/real-graph-benchmark.json).
 
 At the checked rates, four physical CPU cores and 8 GiB RAM cost approximately $0.2532/hour. A 20-minute worker ceiling is approximately $0.0844 before image-build overhead. These are resource estimates, not a final invoice. Account limits and credits must still be checked before launching.
+
+The authenticated workspace dashboard reports $1 included monthly compute credit, a $1 usage limit set by Modal, and no payment method. These account-specific limits take precedence over the generic pricing page.

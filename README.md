@@ -38,4 +38,17 @@ The casino design is inspired by [Carlo Esposito’s fly-chess](https://github.c
 
 Playing-card SVGs are by [Adrian Kennard](https://www.me.uk/cards/) and are CC0. Their attribution is retained with the card assets.
 
-The proposed FlyWire graph is CC BY-NC 4.0 and requires attribution and non-commercial use. Those terms apply to that graph and derived model artifacts; do not infer a permissive data license from the reference code’s MIT license. No connectome data or trained weights are included in this repository yet.
+The FlyWire graph is CC BY-NC 4.0 and requires attribution and non-commercial use. Those terms apply to that graph and derived model artifacts; do not infer a permissive data license from the reference code’s MIT license. Raw connectome data and trained weights are excluded from Git. Checkpoints are stored in the Modal `fly-poker-artifacts` volume and can be downloaded locally.
+
+## Train on Modal
+
+Install and authenticate the Modal CLI, then verify your workspace credits and hard usage cap before launching. This account currently has $1 monthly credit; GPU access is checked separately.
+
+```sh
+modal run modalapp.py --mode smoke --accelerator gpu
+modal run modalapp.py --mode train --accelerator gpu --seed 7 --warm-steps 64 --updates 64 --resume --wall-seconds 900
+```
+
+GPU dispatch requests one L4, two CPU cores and 8 GiB RAM, with no retries and a 20-minute worker timeout. The training budget is capped at 15 minutes and reserves evaluation time. Use `--accelerator cpu` for CPU runs. Resume requires an existing checkpoint with matching seed and batch.
+
+The first CPU pilot completed 64 warm-up steps and 32 actor-critic updates over 256 hands. Its small held-out evaluation was inconclusive. See [the measured pilot](experiments/cpu-pilot.json). The browser opponent still uses the local heuristic.

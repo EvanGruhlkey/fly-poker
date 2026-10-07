@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "model": {
+      "steps": 8,
+      "gain": 4.0,
+      "observation_features": 118,
+      "action_count": 7,
+      "approximation": "signed-leaky-rate-reservoir-v1"
+    },
+    "graph_sha256": "4d63295f5e0d9b9ca7b4cf7802f975c2fc9fad87f29ee451305ccab5de02abe2",
+    "neurons": 134209,
+    "connections": 2700513,
+    "inputs": 2048,
+    "outputs": 1415
+  },
+  "config": {
+    "seed": 7,
+    "warm_steps": 64,
+    "updates": 32,
+    "batch": 8,
+    "eval_pairs": 15,
+    "resume": false
+  },
+  "progress": {
+    "warm_steps": 64,
+    "updates": 32,
+    "hands": 256,
+    "decisions": 980
+  },
+  "elapsed_seconds": 273.91968278,
+  "sensory_weights_changed": true,
+  "interpretation": "Fixed signed connectome rate approximation with trained adapters; pilot results do not establish poker strength.",
+  "source_commit": "6dd2930",
+  "device": "cpu",
+  "evaluation": {
+    "trained_vs_random": {
+      "mean_bb_per_hand": -6.85,
+      "ci95": [
+        -20.667916666666667,
+        7.167499999999988
+      ],
+      "ci95_method": "paired-deck percentile bootstrap; 5000 resamples",
+      "sample_limited": true,
+      "hands": 30,
+      "complete": true,
+      "conclusion": "inconclusive"
+    },
+    "trained_vs_check_call": {
+      "mean_bb_per_hand": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ],
+      "ci95_method": "paired-deck percentile bootstrap; 5000 resamples",
+      "sample_limited": true,
+      "hands": 30,
+      "complete": true,
+      "conclusion": "inconclusive"
+    },
+    "trained_vs_equity": {
+      "mean_bb_per_hand": -3.95,
+      "ci95": [
+        -8.13375,
+        -0.6995833333333393
+      ],
+      "ci95_method": "paired-deck percentile bootstrap; 5000 resamples",
+      "sample_limited": true,
+      "hands": 30,
+      "complete": true,
+      "conclusion": "limited-sample negative"
+    },
+    "zero_edges_vs_random": {
+      "mean_bb_per_hand": -6.85,
+      "ci95": [
+        -20.667916666666667,
+        7.167499999999988
+      ],
+      "ci95_method": "paired-deck percentile bootstrap; 5000 resamples",
+      "sample_limited": true,
+      "hands": 30,
+      "complete": true,
+      "conclusion": "inconclusive"
+    },
+    "shuffled_wiring_vs_random": {
+      "mean_bb_per_hand": -6.85,
+      "ci95": [
+        -20.667916666666667,
+        7.167499999999988
+      ],
+      "ci95_method": "paired-deck percentile bootstrap; 5000 resamples",
+      "sample_limited": true,
+      "hands": 30,
+      "complete": true,
+      "conclusion": "inconclusive"
+    },
+    "untrained_vs_random": {
+      "mean_bb_per_hand": 7.55,
+      "ci95": [
+        -8.983333333333333,
+        23.983749999999993
+      ],
+      "ci95_method": "paired-deck percentile bootstrap; 5000 resamples",
+      "sample_limited": true,
+      "hands": 30,
+      "complete": true,
+      "conclusion": "inconclusive"
+    }
+  }
+}
