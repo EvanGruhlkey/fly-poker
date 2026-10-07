@@ -73,6 +73,10 @@ def rollout(model: BrainPolicy, frozen: BrainPolicy, rng: np.random.Generator,
         for obs, action, env, seed, seat in zip(observations, actions, envs, seeds, learner_seats, strict=True)]
 
 
+def normalized_reward(reward_bb: float) -> float:
+    return reward_bb / 200
+
+
 def train_batch(model: BrainPolicy, optimizer, episodes: list[Episode], budget: Budget) -> dict:
     observations = []
     actions = []
@@ -81,7 +85,7 @@ def train_batch(model: BrainPolicy, optimizer, episodes: list[Episode], budget: 
         count = len(episode.actions)
         observations.extend(episode.observations)
         actions.extend(episode.actions)
-        targets.extend(episode.reward_bb / 100 for index in range(count))
+        targets.extend(normalized_reward(episode.reward_bb) for index in range(count))
     if not observations:
         return {'loss': 0.0, 'decisions': 0}
     device = next(model.parameters()).device
@@ -102,3 +106,4 @@ def train_batch(model: BrainPolicy, optimizer, episodes: list[Episode], budget: 
     torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
     optimizer.step()
     return {'loss': total_loss, 'decisions': len(observations)}
+

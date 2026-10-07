@@ -35,3 +35,8 @@ def test_bootstrap_interval_is_reproducible_and_pair_clustered():
     assert first == summarize([-3, -1, 0, 2, 5])
     assert first['ci95_method'] == 'paired-deck percentile bootstrap; 5000 resamples'
     assert first['ci95'][0] <= first['mean_bb_per_hand'] <= first['ci95'][1]
+
+def test_variable_stack_value_target_fits_tanh_range():
+    from training.rollout import normalized_reward
+    assert normalized_reward(199) == .995
+    assert normalized_reward(-199) == -.995
