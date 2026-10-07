@@ -52,3 +52,5 @@ modal run modalapp.py --mode train --accelerator gpu --seed 7 --warm-steps 64 --
 GPU dispatch requests one L4, two CPU cores and 8 GiB RAM, with no retries and a 20-minute worker timeout. The training budget is capped at 15 minutes and reserves evaluation time. Use `--accelerator cpu` for CPU runs. Resume requires an existing checkpoint with matching seed and batch.
 
 The first CPU pilot completed 64 warm-up steps and 32 actor-critic updates over 256 hands. Its small held-out evaluation was inconclusive. See [the measured pilot](experiments/cpu-pilot.json). The browser opponent still uses the local heuristic.
+
+An L4 GPU continuation completed another 32 updates, reaching 512 total training hands in 39.4 seconds for the continuation and evaluation. Saved weights changed after resuming. [GPU results](experiments/gpu-pilot.json) remain sample-limited and do not establish poker strength.
