@@ -6,10 +6,11 @@ from .environment import Observation, Holdem
 DECK = tuple(rank + suit for rank in '23456789TJQKA' for suit in 'cdhs')
 
 
-def equity(obs: Observation, rng: np.random.Generator, samples: int = 16, budget: Budget | None = None) -> float:
+def equity(obs: Observation, rng: np.random.Generator, samples: int = 64, budget: Budget | None = None) -> float:
     known = set(obs.hole + obs.board)
     unseen = tuple(card for card in DECK if card not in known)
     wins = 0.0
+    total_weight = 0.0
     for _ in range(samples):
         if budget:
             budget.check()
@@ -17,8 +18,10 @@ def equity(obs: Observation, rng: np.random.Generator, samples: int = 16, budget
         board = ''.join(obs.board + tuple(drawn[2:]))
         own = StandardHighHand.from_game(''.join(obs.hole), board)
         opponent = StandardHighHand.from_game(''.join(drawn[:2]), board)
-        wins += 1 if own > opponent else .5 if own == opponent else 0
-    return wins / samples
+        weight = range_weight(obs, tuple(drawn[:2]))
+        wins += weight * (1 if own > opponent else .5 if own == opponent else 0)
+        total_weight += weight
+    return wins / total_weight
 
 
 def heuristic(obs: Observation, win_probability: float) -> int:
@@ -46,12 +49,42 @@ def baseline(obs: Observation, kind: str, rng: np.random.Generator, budget: Budg
     raise ValueError('unknown baseline')
 
 
+def range_weight(obs: Observation, hole: tuple[str, str]) -> float:
+    ranks = sorted(('23456789TJQKA'.index(card[0]) + 2 for card in hole), reverse=True)
+    strength = (sum(ranks) / 28 + .5 * (ranks[0] == ranks[1]) + .1 * (hole[0][1] == hole[1][1])) / 1.6
+    pressure = sum(min(1, event.paid / 80) for event in obs.history if not event.actor and event.kind == 'raise')
+    return float(np.exp(min(3, pressure) * 2 * strength))
+
+
+def action_targets(obs: Observation, probability: float) -> tuple[np.ndarray, float]:
+    values = np.full(7, -np.inf)
+    for index, action in enumerate(obs.actions):
+        if action is None:
+            continue
+        kind, amount = action
+        if kind == 'fold':
+            values[index] = 0
+            continue
+        paid = max(0, amount - obs.committed) if kind == 'raise' else amount
+        response = min(obs.opponent_stack, max(0, obs.committed + paid - obs.opponent_committed)) if kind == 'raise' else 0
+        matched = min(paid, max(0, obs.opponent_committed + obs.opponent_stack - obs.committed))
+        values[index] = probability * (obs.pot + response) - (1 - probability) * matched
+    temperature = max(4, .2 * obs.pot)
+    weights = np.exp((values - np.max(values)) / temperature)
+    targets = weights / weights.sum()
+    return targets.astype(np.float32), float(np.clip(np.dot(targets[np.array(obs.mask)], values[np.array(obs.mask)]) / 800, -1, 1))
+
+
+def initial_stacks(rng: np.random.Generator, *, variable: bool) -> tuple[int, int]:
+    buyin = int(rng.integers(4, 797)) if variable and rng.random() < .25 else 400
+    return buyin, 800 - buyin
+
+
 def sample_states(rng: np.random.Generator, count: int, budget: Budget) -> list[Observation]:
     states: list[Observation] = []
     while len(states) < count:
         budget.check()
-        buyin = int(rng.integers(4, 797))
-        env = Holdem(int(rng.integers(0, 2**30)), dealer=int(rng.integers(0, 2)), stacks=(buyin, 800-buyin))
+        env = Holdem(int(rng.integers(0, 2**30)), dealer=int(rng.integers(0, 2)), stacks=initial_stacks(rng, variable=False))
         hand = []
         while not env.terminal:
             budget.check()
@@ -59,7 +92,8 @@ def sample_states(rng: np.random.Generator, count: int, budget: Budget) -> list[
             hand.append(observation)
             action = 1 if rng.random() < .8 else int(rng.choice(np.flatnonzero(observation.mask)))
             env.step(action)
-        rng.shuffle(hand)
-        states.extend(hand)
-    return states[:count]
-
+        wanted_street = len(states) % 4
+        matching = [obs for obs in hand if obs.street == wanted_street]
+        if matching:
+            states.append(matching[int(rng.integers(len(matching)))])
+    return states
