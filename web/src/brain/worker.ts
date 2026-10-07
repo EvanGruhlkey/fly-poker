@@ -1,3 +1,4 @@
+import {sampleAction} from './sampling.mjs';
 import {parseModel,forward,type LoadedModel} from './runtime.mjs';
 import type {BrainRequest,BrainResponse} from './protocol';
 const graphHash='4d63295f5e0d9b9ca7b4cf7802f975c2fc9fad87f29ee451305ccab5de02abe2';
@@ -27,7 +28,7 @@ self.onmessage=async(event:MessageEvent<BrainRequest>)=>{
   }else{
    if(!model)throw new Error('Trained brain is not loaded.');
    const start=performance.now();const result=forward(model,request.features,request.mask);
-   let index=0;for(let i=1;i<7;i++)if(result.logits[i]>result.logits[index])index=i;
+   const index=sampleAction(result.logits);
    reply({kind:'result',id:request.id,index,value:result.value,inferenceMs:performance.now()-start});
   }
  }catch(error){reply({kind:'error',id:request.id,message:error instanceof Error?error.message:'Brain inference failed.'});}
