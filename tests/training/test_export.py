@@ -64,3 +64,20 @@ console.log(JSON.stringify(observations.map(x=>({{features:Array.from(encodeObse
         for python_action,js_action in zip(actions,result['actions']):
             if python_action and python_action[0]=='raise':
                 assert python_action[1] == js_action['to']
+
+
+def test_public_model_download_verifies_before_replacing(tmp_path):
+    import hashlib
+    data = b'valid-trained-model'
+    expected = hashlib.sha256(data).hexdigest()
+    (tmp_path/'manifest.json').write_text(json.dumps({'format':'fly-poker-brain-v2','bytes':len(data),'sha256':expected}))
+    (tmp_path/'model.bin').write_bytes(b'preserve-existing')
+    script_uri = (Path(__file__).parents[2]/'web/scripts/fetch-brain.mjs').as_uri()
+    script = f"""import {{fetchBrain}} from '{script_uri}';
+try {{await fetchBrain(process.argv[1],'data:application/octet-stream,incorrect');process.exitCode=1;}}
+catch(error) {{if(!error.message.includes('verification')) throw error;}}"""
+    subprocess.check_call([shutil.which('node'),'--input-type=module','-e',script,str(tmp_path)])
+    assert (tmp_path/'model.bin').read_bytes() == b'preserve-existing'
+    script = f"import {{fetchBrain}} from '{script_uri}';await fetchBrain(process.argv[1],'data:application/octet-stream,valid-trained-model');"
+    subprocess.check_call([shutil.which('node'),'--input-type=module','-e',script,str(tmp_path)])
+    assert (tmp_path/'model.bin').read_bytes() == data
