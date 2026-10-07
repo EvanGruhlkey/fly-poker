@@ -49,14 +49,15 @@ def test_browser_public_features_and_seven_wagers_match_pokerkit(tmp_path):
                     'maxTo':state.max_completion_betting_or_raising_to_amount} if raises else {'kind':'none'}}
             observations.append({'holeCards':obs.hole,'board':obs.board,'street':obs.street,'dealer':obs.dealer,
                 'pot':obs.pot,'stack':obs.stack,'opponentStack':obs.opponent_stack,'committed':obs.committed,
-                'opponentCommitted':obs.opponent_committed,'legal':legal})
+                'opponentCommitted':obs.opponent_committed,'legal':legal,
+                'publicActions':[{'actor':'fly' if event.actor else 'player','street':event.street,'kind':event.kind,'paid':event.paid} for event in obs.history]})
             expected.append((encode(obs), obs.actions))
             env.step(int(rng.choice(np.flatnonzero(obs.mask))))
     (tmp_path/'observations.json').write_text(json.dumps(observations))
     domain = (Path(__file__).parents[2]/'web/src/brain/domain.mjs').as_uri()
     script = f"""import fs from 'node:fs';import {{abstractActions,encodeObservation}} from '{domain}';
 const observations=JSON.parse(fs.readFileSync(process.argv[1]));
-console.log(JSON.stringify(observations.map(x=>({{features:Array.from(encodeObservation(x)),actions:abstractActions(x)}}))));"""
+console.log(JSON.stringify(observations.map(x=>({{features:Array.from(encodeObservation(x,undefined,'cards-history-v2')),actions:abstractActions(x)}}))));"""
     actual = json.loads(subprocess.check_output([shutil.which('node'),'--input-type=module','-e',script,str(tmp_path/'observations.json')],text=True))
     for result,(features,actions) in zip(actual,expected,strict=True):
         assert np.allclose(result['features'],features,atol=1e-7)

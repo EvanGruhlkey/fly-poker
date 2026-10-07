@@ -48,3 +48,13 @@ it('matches trainer-sized wagers in real engine states, including underraises an
  under=play(under,{kind:'all-in'}).state;
  expect(inputFor(under).actions).toEqual([{kind:'fold'},{kind:'call'},null,null,null,null,null]);
 });
+
+it('preserves public action payments across streets and hides private information',()=>{
+ let state=play(startHand().state,{kind:'call'}).state;
+ if(state.kind!=='betting')throw new Error('Expected betting');
+ const view=observeBrain(state);const values=brainInput(view,'cards-history-v2').features;
+ expect(values.length).toBe(250);expect(values[119]).toBe(1);expect(values[126]).toBe(1);expect(values[128]).toBeCloseTo(2/800);
+ state=play(state,{kind:'check'}).state;
+ if(state.kind!=='betting')throw new Error('Expected betting');
+ expect(state.publicActions).toEqual([{actor:'player',street:0,kind:'call',paid:2},{actor:'fly',street:0,kind:'check',paid:0}]);
+});

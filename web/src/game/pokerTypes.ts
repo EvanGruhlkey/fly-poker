@@ -5,10 +5,11 @@ export type Seat='player'|'fly';
 export type Street=0|1|2|3;
 export type Chips=number;
 export type Balances=Readonly<Record<Seat,Chips>>;
+export interface PublicAction {readonly actor:Seat;readonly street:Street;readonly kind:'fold'|'check'|'call'|'raise';readonly paid:Chips}
 export interface Hand {
  readonly handNumber:number;readonly dealer:Seat;readonly stacks:Balances;readonly committed:Balances;
  readonly pot:Chips;readonly board:readonly Card[];readonly holes:Readonly<Record<Seat,readonly [Card,Card]>>;
- readonly deck:readonly Card[];readonly street:Street;readonly history:readonly string[];
+ readonly deck:readonly Card[];readonly street:Street;readonly history:readonly string[];readonly publicActions:readonly PublicAction[];
 }
 export interface Betting extends Hand {
  readonly kind:'betting';readonly turn:Seat;readonly currentBet:Chips;readonly lastFullRaise:Chips;

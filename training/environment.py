@@ -13,6 +13,14 @@ AUTOMATIONS = (
 
 
 @dataclass(frozen=True)
+class PublicAction:
+    actor: bool
+    street: int
+    kind: str
+    paid: int
+
+
+@dataclass(frozen=True)
 class Observation:
     hole: tuple[str, str]
     board: tuple[str, ...]
@@ -26,6 +34,8 @@ class Observation:
     opponent_committed: int
     actions: tuple[tuple[str, int] | None, ...]
 
+    history: tuple[PublicAction, ...] = ()
+
     @property
     def mask(self) -> tuple[bool, ...]:
         return tuple(action is not None for action in self.actions)
@@ -37,6 +47,7 @@ class Holdem:
             raise ValueError('dealer must be 0 or 1')
         if any(not isinstance(chips, int) or chips <= 0 for chips in stacks) or sum(stacks) != 800:
             raise ValueError('positive buyins must conserve 800 quarter-BB chips')
+        self._history = []
         self._starting_stacks = stacks
         self.dealer = dealer
         self._seats = (1 - dealer, dealer)
@@ -114,13 +125,19 @@ class Holdem:
         return Observation(tuple(repr(card) for card in state.hole_cards[actor]),
             tuple(repr(cards[0]) for cards in state.board_cards), state.street_index,
             self.actor == self.dealer, self.pot, state.checking_or_calling_amount,
-            state.stacks[actor], state.stacks[1 - actor], state.bets[actor], state.bets[1 - actor], self.actions())
+            state.stacks[actor], state.stacks[1 - actor], state.bets[actor], state.bets[1 - actor], self.actions(),
+            tuple(PublicAction(seat == self.actor, street, kind, paid) for seat, street, kind, paid in self._history[-12:]))
 
     def step(self, index: int):
         actions = self.actions()
         if not isinstance(index, int) or not 0 <= index < 7 or actions[index] is None:
             raise ValueError('illegal abstract action')
         kind, amount = actions[index]
+        seat, street = self.actor, self._state.street_index
+        committed = self._state.bets[self._state.actor_index]
+        paid = amount - committed if kind == 'raise' else amount
+        public_kind = 'check' if kind == 'check_call' and not paid else 'call' if kind == 'check_call' else kind
+        self._history.append((seat, street, public_kind, paid))
         if kind == 'fold':
             self._state.fold()
         elif kind == 'check_call':
