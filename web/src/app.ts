@@ -73,7 +73,7 @@ export function mountApp(root:HTMLElement):()=>void{
  };
  const flyTurns=async(ticket:number)=>{
   while(ticket===generation&&state.kind==='betting'&&state.turn==='fly'){
-   display={...display,busy:true,message:brainStatus.kind==='loading'?'Loading the trained fly brain…':'The neural fly is thinking…'};render();
+   display={...display,busy:true,message:brainStatus.kind==='loading'?'Loading the trained fly brainâ€¦':'The neural fly is thinkingâ€¦'};render();
    try{
     const result=await brain.choose(observeBrain(state));
     if(ticket!==generation)return;
