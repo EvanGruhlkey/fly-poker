@@ -26,12 +26,16 @@ def tensor_batch(observations: list[Observation], device):
     return features, mask
 
 
-def infer(model: BrainPolicy, observations: list[Observation], *, greedy=False, ablation='real') -> list[int]:
+def infer(model: BrainPolicy, observations: list[Observation], *, greedy=False, ablation='real', generators=None) -> list[int]:
     device = next(model.parameters()).device
     with torch.no_grad():
         logits, _ = model(*tensor_batch(observations, device), ablation=ablation)
-        actions = logits.argmax(-1) if greedy else torch.distributions.Categorical(logits=logits).sample()
-    return actions.cpu().tolist()
+        if greedy:
+            return logits.argmax(-1).cpu().tolist()
+        if generators is None:
+            return torch.distributions.Categorical(logits=logits).sample().cpu().tolist()
+        probabilities = logits.softmax(-1).cpu().numpy()
+        return [int(generator.choice(7, p=probability / probability.sum())) for generator, probability in zip(generators, probabilities, strict=True)]
 
 
 def rollout(model: BrainPolicy, frozen: BrainPolicy, rng: np.random.Generator,
@@ -43,6 +47,8 @@ def rollout(model: BrainPolicy, frozen: BrainPolicy, rng: np.random.Generator,
     envs = [Holdem(seed, dealer=0, stacks=stacks) for seed, stacks in zip(seeds, starting, strict=True)]
     observations: list[list[Observation]] = [[] for _ in seeds]
     actions: list[list[int]] = [[] for _ in seeds]
+    action_rngs = [np.random.default_rng(seed * 2 + seat) for seed, seat in zip(seeds, learner_seats, strict=True)]
+    opponent_rngs = [np.random.default_rng(seed * 2 + 1 - seat) for seed, seat in zip(seeds, learner_seats, strict=True)]
     turns = 0
     while any(not env.terminal for env in envs):
         budget.check()
@@ -52,7 +58,7 @@ def rollout(model: BrainPolicy, frozen: BrainPolicy, rng: np.random.Generator,
         learner_indices = [i for i, env in enumerate(envs) if not env.terminal and env.actor == learner_seats[i]]
         if learner_indices:
             batch = [envs[i].observe() for i in learner_indices]
-            choices = infer(model, batch, greedy=greedy, ablation=ablation)
+            choices = infer(model, batch, greedy=greedy, ablation=ablation, generators=[action_rngs[i] for i in learner_indices])
             for index, obs, action in zip(learner_indices, batch, choices, strict=True):
                 observations[index].append(obs)
                 actions[index].append(action)
@@ -64,10 +70,10 @@ def rollout(model: BrainPolicy, frozen: BrainPolicy, rng: np.random.Generator,
             if opponents[i] == 'frozen':
                 frozen_indices.append(i)
             else:
-                env.step(baseline(env.observe(), opponents[i], rng, budget))
+                env.step(baseline(env.observe(), opponents[i], opponent_rngs[i], budget))
         if frozen_indices:
             batch = [envs[i].observe() for i in frozen_indices]
-            for index, action in zip(frozen_indices, infer(frozen, batch), strict=True):
+            for index, action in zip(frozen_indices, infer(frozen, batch, generators=[opponent_rngs[i] for i in frozen_indices]), strict=True):
                 envs[index].step(action)
     return [Episode(tuple(obs), tuple(action), env.reward(seat), seed, seat)
         for obs, action, env, seed, seat in zip(observations, actions, envs, seeds, learner_seats, strict=True)]

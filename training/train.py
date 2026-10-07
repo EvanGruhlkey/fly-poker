@@ -5,12 +5,12 @@ from pathlib import Path
 import numpy as np
 import torch
 from .budget import Budget, BudgetExceeded
-from .checkpoint import load_checkpoint, save_checkpoint
+from .checkpoint import load_checkpoint, save_checkpoint, migrate_v2
 from .data import Graph
 from .evaluation import evaluate
 from .model import BrainPolicy
 from .rollout import rollout, tensor_batch, train_batch, TRAIN_SEED_LIMIT
-from .teacher import equity, heuristic, sample_states
+from .teacher import equity, action_targets, sample_states, initial_stacks
 
 
 @dataclass(frozen=True)
@@ -21,6 +21,7 @@ class TrainConfig:
     batch: int = 8
     eval_pairs: int = 15
     resume: bool = False
+    init_from_v2: str | None = None
 
     def validate(self):
         if not 0 <= self.seed < TRAIN_SEED_LIMIT or not 1 <= self.batch <= 16:
@@ -42,6 +43,7 @@ def train(graph: Graph, directory: Path, config: TrainConfig, budget: Budget,
     torch.manual_seed(config.seed)
     rng = np.random.default_rng(config.seed)
     model = BrainPolicy(graph).to(device)
+    migration = migrate_v2(Path(config.init_from_v2), model) if config.init_from_v2 and not config.resume else None
     untrained = BrainPolicy(graph).to(device)
     frozen = BrainPolicy(graph).to(device)
     copy_parameters(model, untrained)
@@ -58,6 +60,8 @@ def train(graph: Graph, directory: Path, config: TrainConfig, budget: Budget,
         if restored['config']['seed'] != config.seed or restored['config']['batch'] != config.batch:
             raise ValueError('resume seed and batch must match the saved run')
         progress = restored['progress']
+        if config.init_from_v2:
+            migrate_v2(Path(config.init_from_v2), untrained)
         copy_parameters(model, frozen)
     else:
         save_checkpoint(directory / 'initial.pt', model, optimizer, rng, progress.copy(), asdict(config))
@@ -75,11 +79,12 @@ def train(graph: Graph, directory: Path, config: TrainConfig, budget: Budget,
             training_budget.check()
             observations = sample_states(rng, config.batch, training_budget)
             equities = [equity(obs, rng, budget=training_budget) for obs in observations]
-            targets = torch.tensor([heuristic(obs, probability) for obs, probability in zip(observations, equities, strict=True)], device=device)
-            values = torch.tensor([2 * probability - 1 for probability in equities], device=device)
+            teacher_targets = [action_targets(obs, probability) for obs, probability in zip(observations, equities, strict=True)]
+            targets = torch.tensor(np.stack([target for target, _ in teacher_targets]), device=device)
+            values = torch.tensor([value for _, value in teacher_targets], device=device)
             optimizer.zero_grad(set_to_none=True)
             logits, prediction = model(*tensor_batch(observations, device))
-            loss = torch.nn.functional.cross_entropy(logits, targets) + .5 * (prediction - values).square().mean()
+            loss = -(targets * logits.log_softmax(-1).masked_fill(~torch.tensor([obs.mask for obs in observations], device=device), 0)).sum(-1).mean() + .5 * (prediction - values).square().mean()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1)
             optimizer.step()
@@ -94,8 +99,8 @@ def train(graph: Graph, directory: Path, config: TrainConfig, budget: Budget,
             seeds = rng.integers(0, TRAIN_SEED_LIMIT, config.batch).tolist()
             seats = rng.integers(0, 2, config.batch).tolist()
             opponents = rng.choice(['random', 'check_call', 'equity', 'frozen', 'frozen', 'frozen'], config.batch).tolist()
-            buyins = rng.integers(4, 797, config.batch).tolist()
-            episodes = rollout(model, frozen, rng, training_budget, seeds=seeds, learner_seats=seats, opponents=opponents, initial_stacks=[(buyin, 800-buyin) for buyin in buyins])
+            stacks = [initial_stacks(rng, variable=progress['updates'] >= 128) for _ in seeds]
+            episodes = rollout(model, frozen, rng, training_budget, seeds=seeds, learner_seats=seats, opponents=opponents, initial_stacks=stacks)
             result = train_batch(model, optimizer, episodes, training_budget)
             progress['updates'] += 1
             progress['hands'] += len(episodes)
@@ -121,6 +126,9 @@ def train(graph: Graph, directory: Path, config: TrainConfig, budget: Budget,
         'parameters_finite': all(torch.isfinite(parameter).all().item() for parameter in model.parameters()),
         'sensory_weights_changed': not torch.equal(initial_sensory, model.sensory.weight.detach()),
         'recent_losses': losses[-8:], 'evaluation': evaluations, 'checkpoint': str(path),
+        'migration': migration, 'teacher': {'samples': 64, 'targets': 'soft incremental showdown value; conservative always-call response', 'range': 'importance weighted preflop strength prior conditioned on public aggression'},
+        'starting_policy': 'migrated-v2' if config.init_from_v2 else 'random-initialization',
+        'curriculum': '100 BB first 128 updates, then 75% 100 BB and 25% unequal stacks',
         'training_seed_domain': [0, TRAIN_SEED_LIMIT - 1], 'evaluation_seed_domain': [TRAIN_SEED_LIMIT, None],
         'interpretation': 'Fixed connectome topology/signs with learned edge magnitudes, neuron leaks, and adapters; pilot results do not establish poker strength.'}
     (directory / 'metrics.json').write_text(json.dumps(report, indent=2), encoding='utf-8')

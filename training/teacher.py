@@ -68,7 +68,8 @@ def action_targets(obs: Observation, probability: float) -> tuple[np.ndarray, fl
         paid = max(0, amount - obs.committed) if kind == 'raise' else amount
         response = min(obs.opponent_stack, max(0, obs.committed + paid - obs.opponent_committed)) if kind == 'raise' else 0
         matched = min(paid, max(0, obs.opponent_committed + obs.opponent_stack - obs.committed))
-        values[index] = probability * (obs.pot + response) - (1 - probability) * matched
+        contested_pot = obs.pot - max(0, obs.opponent_committed - (obs.committed + matched))
+        values[index] = probability * (contested_pot + response) - (1 - probability) * matched
     temperature = max(4, .2 * obs.pot)
     weights = np.exp((values - np.max(values)) / temperature)
     targets = weights / weights.sum()

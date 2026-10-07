@@ -19,3 +19,15 @@ def test_public_aggression_weights_generated_strong_ranges():
     raised=replace(obs,history=(PublicAction(False,0,'raise',80),))
     assert range_weight(raised,('As','Ad'))>range_weight(raised,('7c','2d'))
     assert 0<=equity(raised,np.random.default_rng(4),samples=64)<=1
+
+
+def test_short_all_in_teacher_excludes_uncalled_opponent_refund():
+    obs=Holdem(17).observe()
+    short=replace(obs,pot=100,committed=0,opponent_committed=100,stack=10,opponent_stack=690,
+        actions=(('fold',0),('check_call',10),None,None,None,None,None),to_call=10)
+    probabilities,value=action_targets(short,.5)
+    assert np.allclose(probabilities[:2],[.5,.5])
+    assert value==0
+    prior_street=replace(short,pot=120)
+    probabilities,value=action_targets(prior_street,.5)
+    assert probabilities[1]>probabilities[0] and value>0
