@@ -6,7 +6,7 @@ import { qualityForWidth } from './game/model';
 import type { PokerAction,PokerState,Transition } from './game/pokerTypes';
 import { CasinoScene } from './scene/CasinoScene';
 import { pokerMarkup } from './ui/pokerHud';
-import { tableFor,statusFor,type Presentation } from './ui/pokerView';
+import { tableFor,statusFor,moveChips,type Presentation } from './ui/pokerView';
 export function createAppTitle():string{return 'Poker vs. a Fruit Fly';}
 export function mountApp(root:HTMLElement):()=>void{
  const brain=new NeuralOpponent();let brainStatus:BrainStatus={kind:'loading'};let loadGeneration=0;let inferences=0;let inferenceMs=0;
@@ -44,12 +44,12 @@ export function mountApp(root:HTMLElement):()=>void{
   for(const effect of transition.effects){
    if(ticket!==generation)return false;
    if(effect.kind==='chips'){
-    display={...display,message:effect.moves[0]?.from==='pot'?'Chips return to the stacks…':'Chips into the pot…'};render();
+    const move=effect.moves[0];
+    const message=move?.from==='pot'?'Awarding the pot…':move?.to==='pot'?'Collecting bets…':move?.to==='player'||move?.to==='fly'?'Returning the uncalled bet…':move?.from==='player'?'You bet…':'Fly bets…';
+    display={...display,message};render();
     if(scene&&!await scene.animate([effect.moves]))return false;
     if(ticket!==generation)return false;
-    const accounts={player:display.table.playerStackBb,fly:display.table.flyStackBb,pot:display.table.potBb};
-    effect.moves.forEach(move=>{accounts[move.from]-=move.amountBb;accounts[move.to]+=move.amountBb;});
-    display={...display,table:{...display.table,playerStackBb:accounts.player,flyStackBb:accounts.fly,potBb:accounts.pot}};render();
+    display={...display,table:moveChips(display.table,effect.moves)};render();
    }else if(effect.kind==='deal'){
     const newCards=effect.board.filter(card=>!display.table.board.includes(card));
     display={...display,table:{...display.table,board:effect.board},dealingCards:newCards,message:`Dealing the ${effect.board.length===3?'flop':effect.board.length===4?'turn':'river'}…`};render();
@@ -97,7 +97,7 @@ export function mountApp(root:HTMLElement):()=>void{
  };
  const begin=async(transition:Transition,stacks:{readonly player:number;readonly fly:number})=>{
   const ticket=++generation;state=transition.state;raise=8;
-  display={table:{...tableFor(state),playerStackBb:stacks.player/4,flyStackBb:stacks.fly/4,potBb:0,board:[]},opponentCards:[],winningCards:[],animation:'none',dealingCards:state.holes.player,winner:'none',message:'Dealing a new hand…',busy:true};
+  display={table:{...tableFor(state),playerStackBb:stacks.player/4,flyStackBb:stacks.fly/4,playerWagerBb:0,flyWagerBb:0,potBb:0,board:[]},opponentCards:[],winningCards:[],animation:'none',dealingCards:state.holes.player,winner:'none',message:'Dealing a new hand…',busy:true};
   render();scene?.update(display.table);if(!await wait(500,ticket))return;
   if(await execute(transition,ticket))await flyTurns(ticket);
  };

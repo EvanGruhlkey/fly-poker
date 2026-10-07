@@ -9,7 +9,7 @@ describe('heads-up Hold’em',()=>{
   expect(state.stacks).toEqual({player:398,fly:396});expect(state.pot).toBe(6);
   expect(state.holes.fly).toEqual(['2C','4C']);expect(state.holes.player).toEqual(['3C','5C']);
   expect(state.board).toEqual([]);expect(state.kind==='betting'&&state.turn).toBe('player');
-  expect(effects[0]).toEqual({kind:'chips',moves:[{from:'player',to:'pot',amountBb:.5},{from:'fly',to:'pot',amountBb:1}]});
+  expect(effects[0]).toEqual({kind:'chips',moves:[{from:'player',to:'player-wager',amountBb:.5},{from:'fly',to:'fly-wager',amountBb:1}]});
  });
  it('keeps the big blind option after a limp and burns before the flop',()=>{
   let state=startHand({deck:orderedDeck()}).state;
@@ -32,7 +32,7 @@ describe('heads-up Hold’em',()=>{
   let state=startHand({stacks:{player:760,fly:40}}).state;
   state=play(state,{kind:'all-in'}).state;
   const transition=play(state,{kind:'call'});
-  expect(transition.effects.some(effect=>effect.kind==='chips'&&effect.moves.some(move=>move.from==='pot'&&move.to==='player'&&move.amountBb===180))).toBe(true);
+  expect(transition.effects.some(effect=>effect.kind==='chips'&&effect.moves.some(move=>move.from==='player-wager'&&move.to==='player'&&move.amountBb===180))).toBe(true);
   expect(transition.effects.filter(effect=>effect.kind==='deal').map(effect=>effect.kind==='deal'&&effect.board.length)).toEqual([3,4,5]);
   expect(transition.state.kind).toBe('complete');expect(total(transition.state)).toBe(800);
  });
@@ -48,7 +48,7 @@ describe('heads-up Hold’em',()=>{
   const transition=startHand({stacks:{player:1,fly:799}});
   expect(transition.state.kind).toBe('complete');expect(transition.state.board).toHaveLength(5);
   expect(total(transition.state)).toBe(800);
-  expect(transition.effects.some(effect=>effect.kind==='chips'&&effect.moves.some(move=>move.from==='pot'&&move.to==='fly'&&move.amountBb===.75))).toBe(true);
+  expect(transition.effects.some(effect=>effect.kind==='chips'&&effect.moves.some(move=>move.from==='fly-wager'&&move.to==='fly'&&move.amountBb===.75))).toBe(true);
  });
  it('folds award once and next hands carry balances with an alternating button',()=>{
   const folded=play(startHand({}).state,{kind:'fold'}).state;

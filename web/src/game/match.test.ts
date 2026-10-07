@@ -4,14 +4,16 @@ import { orderedDeck,shuffledDeck } from './deck';
 import type { Card } from './model';
 import type { PokerAction,PokerState,Transition } from './pokerTypes';
 const rig=(prefix:readonly Card[])=>[...prefix,...orderedDeck().filter(card=>!prefix.includes(card))];
-function ledger(before:{player:number;fly:number;pot:number},transition:Transition):void{
- const accounts={...before};
+function ledger(before:{player:number;fly:number;pot:number;committed?:{player:number;fly:number}},transition:Transition):void{
+ const wagers=before.committed??{player:0,fly:0};
+ const accounts={player:before.player,fly:before.fly,pot:before.pot-wagers.player-wagers.fly,'player-wager':wagers.player,'fly-wager':wagers.fly};
  transition.effects.forEach(effect=>{if(effect.kind==='chips')effect.moves.forEach(move=>{
   const amount=move.amountBb*4;expect(Number.isInteger(amount)).toBe(true);
   accounts[move.from]-=amount;accounts[move.to]+=amount;expect(accounts[move.from]).toBeGreaterThanOrEqual(0);
  });});
- expect(accounts).toEqual({...transition.state.stacks,pot:transition.state.pot});
- expect(accounts.player+accounts.fly+accounts.pot).toBe(800);
+ const next=transition.state;const committed=next.kind==='betting'?next.committed:{player:0,fly:0};
+ expect(accounts).toEqual({...next.stacks,pot:next.pot-committed.player-committed.fly,'player-wager':committed.player,'fly-wager':committed.fly});
+ expect(Object.values(accounts).reduce((sum,value)=>sum+value,0)).toBe(800);
 }
 describe('complete poker matches',()=>{
  it('splits a straight-flush board tie and returns both buy-ins',()=>{
@@ -37,7 +39,7 @@ describe('complete poker matches',()=>{
     const roll=random();
     if(legal.canFold&&roll<.1)action={kind:'fold'};
     else if(legal.raise.kind==='raise'&&roll>.65)action={kind:'raise',to:legal.raise.minTo+Math.floor(random()*(legal.raise.maxTo-legal.raise.minTo+1))};
-    transition=play(state,action);ledger({...state.stacks,pot:state.pot},transition);
+    transition=play(state,action);ledger({...state.stacks,pot:state.pot,committed:state.kind==='betting'?state.committed:undefined},transition);
    }
    state=transition.state;
   }
@@ -49,7 +51,7 @@ describe('complete poker matches',()=>{
    for(let hand=0;hand<100&&state.stacks.player>0&&state.stacks.fly>0;hand++){
     while(state.kind==='betting'){
      const legal=legalActions(state);const action:PokerAction=legal.canAllIn?{kind:'all-in'}:legal.canCheck?{kind:'check'}:{kind:'call'};
-     const transition=play(state,action);ledger({...state.stacks,pot:state.pot},transition);state=transition.state;
+     const transition=play(state,action);ledger({...state.stacks,pot:state.pot,committed:state.kind==='betting'?state.committed:undefined},transition);state=transition.state;
     }
     if(state.stacks.player&&state.stacks.fly)state=nextHand(state,shuffledDeck(random)).state;
    }

@@ -1,3 +1,4 @@
+import { wagerAccount,type ChipAccount } from './chips';
 import { shuffledDeck, orderedDeck } from './deck';
 import { compareHands,evaluate } from './evaluate';
 import { other,bb,streetName,type Seat,type Street,type Betting,type PokerState,type PokerAction,type LegalActions,type Transition,type Effect,type Balances } from './pokerTypes';
@@ -11,14 +12,18 @@ export function legalActions(state:PokerState):LegalActions{
   canAllIn:state.stacks[actor]>0&&(state.stacks[actor]<=toCall||canRaise),
   raise:canRaise?{kind:'raise',minTo:Math.min(maxTo,state.currentBet+state.lastFullRaise),maxTo}:{kind:'none'}};
 }
-const chips=(from:Seat|'pot',to:Seat|'pot',amount:number):Effect=>({kind:'chips',moves:[{from,to,amountBb:amount/4}]});
+const chips=(from:ChipAccount,to:ChipAccount,amount:number):Effect=>({kind:'chips',moves:[{from,to,amountBb:amount/4}]});
 function refund(state:Betting,effects:Effect[]):Betting{
  const difference=state.committed.player-state.committed.fly;
  if(!difference)return state;
  const seat:Seat=difference>0?'player':'fly';const amount=Math.abs(difference);
- effects.push(chips('pot',seat,amount));
+ effects.push(chips(wagerAccount(seat),seat,amount));
  return {...state,pot:state.pot-amount,stacks:{...state.stacks,[seat]:state.stacks[seat]+amount},committed:{...state.committed,[seat]:state.committed[seat]-amount},
   history:[...state.history,`${seat==='player'?'You':'Fly'} get ${bb(amount)} BB uncalled back.`]};
+}
+function collect(state:Betting,effects:Effect[]):void{
+ const moves=(['player','fly'] satisfies Seat[]).filter(seat=>state.committed[seat]>0).map(seat=>({from:wagerAccount(seat),to:'pot' as const,amountBb:state.committed[seat]/4}));
+ if(moves.length)effects.push({kind:'chips',moves});
 }
 function showdown(state:Betting,effects:Effect[]):Transition{
  const hands={player:evaluate([...state.holes.player,...state.board]),fly:evaluate([...state.holes.fly,...state.board])};
@@ -42,6 +47,7 @@ function dealStreet(state:Betting,effects:Effect[]):Betting{
 }
 function settle(state:Betting,effects:Effect[]):Transition{
  state=refund(state,effects);
+ collect(state,effects);
  const allIn=state.stacks.player===0||state.stacks.fly===0;
  if(allIn){while(state.street<3)state=dealStreet(state,effects);return showdown(state,effects);}
  if(state.street===3)return showdown(state,effects);
@@ -59,7 +65,7 @@ export function startHand(options:{readonly stacks?:Balances;readonly dealer?:Se
  const holes:Record<Seat,readonly [Card,Card]>={player:dealer==='player'?[deck[1],deck[3]]:[deck[0],deck[2]],fly:dealer==='fly'?[deck[1],deck[3]]:[deck[0],deck[2]]};
  const committed={player:0,fly:0};const effects:Effect[]=[];
  for(const seat of [dealer,other(dealer)]){const amount=Math.min(stacks[seat],seat===dealer?2:4);stacks[seat]-=amount;committed[seat]=amount;}
- effects.push({kind:'chips',moves:[{from:dealer,to:'pot',amountBb:committed[dealer]/4},{from:other(dealer),to:'pot',amountBb:committed[other(dealer)]/4}]});
+ effects.push({kind:'chips',moves:[{from:dealer,to:wagerAccount(dealer),amountBb:committed[dealer]/4},{from:other(dealer),to:wagerAccount(other(dealer)),amountBb:committed[other(dealer)]/4}]});
  const state:Betting={kind:'betting',handNumber:options.handNumber??1,dealer,stacks,committed,pot:committed.player+committed.fly,holes,deck:deck.slice(4),board:[],street:0,
   turn:dealer,currentBet:Math.max(committed.player,committed.fly),lastFullRaise:4,pending:[dealer,other(dealer)],raiseRights:['player','fly'],
   history:[`Hand ${options.handNumber??1} · ${dealer==='player'?'You':'Fly'} on the button.`,`${dealer==='player'?'You':'Fly'} post ${bb(committed[dealer])} BB. ${other(dealer)==='player'?'You':'Fly'} post ${bb(committed[other(dealer)])} BB.`]};
@@ -74,7 +80,7 @@ export function play(state:PokerState,action:PokerAction):Transition{
  }
  if(action.kind==='fold'){
   if(!legal.canFold)throw new Error('Check when no bet is faced');
-  const matched=refund(state,effects);effects.push(chips('pot',opponent,matched.pot));
+  const matched=refund(state,effects);collect(matched,effects);effects.push(chips('pot',opponent,matched.pot));
   return {state:{...matched,kind:'complete',pot:0,stacks:{...matched.stacks,[opponent]:matched.stacks[opponent]+matched.pot},
    result:{winner:opponent,reason:'fold',label:'Fold',cards:[],awarded:matched.pot},history:[...matched.history,`${actor==='player'?'You fold':'Fly folds'}. ${opponent==='player'?'You win':'Fly wins'} ${bb(matched.pot)} BB.`]},effects};
  }
@@ -88,7 +94,7 @@ export function play(state:PokerState,action:PokerAction):Transition{
   if(full){lastFullRaise=increase;rights=[opponent];}
   description=`${state.currentBet?'raise to':'bet'} ${bb(action.to)} BB${paid===state.stacks[actor]?' all-in':''}`;
  }
- if(paid)effects.push(chips(actor,'pot',paid));
+ if(paid)effects.push(chips(actor,wagerAccount(actor),paid));
  const next:Betting={...state,pot:state.pot+paid,stacks:{...state.stacks,[actor]:state.stacks[actor]-paid},committed:{...state.committed,[actor]:state.committed[actor]+paid},
   turn:opponent,currentBet,lastFullRaise,pending,raiseRights:rights,history:[...state.history,`${actor==='player'?'You':'Fly'} ${description}.`]};
  return !pending.length||noResponseNeeded(next)?settle(next,effects):{state:next,effects};
