@@ -20,3 +20,4 @@ runs/
 .env
 .env.*
 .modal.toml
+web/public/brain/*.bin
