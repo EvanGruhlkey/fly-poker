@@ -151,3 +151,63 @@ def tournament(candidate: Policy, starting: Policy, budget: Budget,
             'budget_exhausted': exhausted, 'policy_mode': 'sampled probabilities',
             'sample_unit': 'seat-swapped match pair' if config.match_hands > 1 else 'seat-swapped hand pair'}
 
+
+
+def promotion(report: dict, *, parity: bool) -> dict:
+    reasons = []
+    if not parity:
+        reasons.append('export/schema parity not verified')
+    if not report.get('complete'):
+        reasons.append('evaluation incomplete')
+    profiles = report.get('profiles', {})
+    if not profiles:
+        reasons.append('no evaluated stack profiles')
+    for name, profile in profiles.items():
+        for gate in ('candidate_vs_equity', 'paired_gain_vs_equity'):
+            entry = profile.get(gate, {})
+            interval = entry.get('ci95')
+            if (not entry.get('complete') or interval is None or len(interval) != 2
+                    or not np.isfinite(interval).all() or interval[0] <= 0):
+                reasons.append(f'{name}: {gate} requires a positive lower confidence bound')
+    return {'promoted': not reasons, 'reasons': reasons}
+
+
+def compare_training_seeds(reports: dict[int, dict]) -> dict:
+    if not reports:
+        raise ValueError('at least one training-seed report required')
+    first = next(iter(reports.values()))
+    for report in reports.values():
+        if report['config'] != first['config'] or report['deal_seeds'] != first['deal_seeds']:
+            raise ValueError('training seeds must use identical evaluation manifests')
+        if report['profiles'].keys() != first['profiles'].keys():
+            raise ValueError('training seeds must use identical stack profiles')
+        for name, profile in report['profiles'].items():
+            if profile.keys() != first['profiles'][name].keys():
+                raise ValueError('training seeds must use identical opponent panels')
+    profiles = {}
+    for name, profile in first['profiles'].items():
+        profiles[name] = {}
+        for key in profile:
+            entries = [report['profiles'][name][key] for report in reports.values()]
+            means = [entry['mean_bb_per_hand'] for entry in entries if entry['mean_bb_per_hand'] is not None]
+            profiles[name][key] = {**summarize(means), 'per_seed_means': means,
+                                  'complete': all(entry['complete'] for entry in entries)}
+    return {'training_seeds': list(reports), 'profiles': profiles, 'config': first['config'],
+            'deal_seeds': first['deal_seeds'], 'sample_unit': 'training seed',
+            'complete': all(report['complete'] for report in reports.values())}
+
+
+def torch_policy(model, *, observation_features: int = 250) -> Policy:
+    import torch
+    from .features import encode
+    device = next(model.parameters()).device
+    model.eval()
+
+    def policy(obs):
+        features = torch.as_tensor(encode(obs)[:observation_features], device=device).unsqueeze(0)
+        mask = torch.tensor([obs.mask], dtype=torch.bool, device=device)
+        with torch.no_grad():
+            output = model(features, mask)
+            logits = output[0] if isinstance(output, tuple) else output
+            return torch.softmax(logits, dim=-1)[0].cpu().numpy()
+    return policy
