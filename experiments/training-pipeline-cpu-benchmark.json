@@ -1,0 +1,32 @@
+{
+  "model": {
+    "steps": 8,
+    "gain": 1.0,
+    "saturation": 10.0,
+    "observation_features": 250,
+    "action_count": 7,
+    "approximation": "signed-learned-saturating-rate-v2"
+  },
+  "graph_sha256": "4d63295f5e0d9b9ca7b4cf7802f975c2fc9fad87f29ee451305ccab5de02abe2",
+  "neurons": 134209,
+  "connections": 2700513,
+  "inputs": 2048,
+  "outputs": 1415,
+  "device": "cpu",
+  "batch": 8,
+  "iterations": 3,
+  "step_seconds": [
+    0.5470000000000255,
+    0.5309999999999491,
+    0.5789999999999509
+  ],
+  "total_seconds": 3.3599999999999,
+  "gpu_name": null,
+  "edge_magnitudes_changed": true,
+  "neuron_leaks_changed": true,
+  "fixed_signs_preserved": true,
+  "gradients_finite": true,
+  "sensory_weights_changed": true,
+  "peak_cuda_bytes": 0,
+  "synthetic": false
+}

@@ -17,6 +17,13 @@ Prefer a standalone teacher because replay, strategy averaging, and many
 environment decisions do not require repeated full-graph backpropagation.
 Retain in-graph self-play as a measured optional refinement.
 
+The independent architecture review selected candidate A's collector and
+checkpoint structure, with candidate B's exact information-set Kuhn evaluator
+and bounded archive. Both candidates agreed on the standalone teacher.
+The review additionally requires terminal transitions without bootstrapping,
+all-mode Q replay, executed best-response actions in the reservoir, and
+complete per-profile evaluations before promotion.
+
 NFSP maintains separate action-value and average-policy networks for each
 seat, replay transitions, and a reservoir of best-response actions. Select
 best-response versus average mode once per player per hand. A transition
