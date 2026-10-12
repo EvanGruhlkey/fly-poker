@@ -6,6 +6,9 @@ from training.model import BrainPolicy
 def test_learned_magnitudes_and_per_neuron_leak_receive_gradients():
     torch.manual_seed(7)
     model = BrainPolicy(tiny_graph())
+    with torch.no_grad():
+        model.sensory.weight.zero_()
+        model.sensory.bias.copy_(torch.tensor([2., .1]))
     assert model.leak_logit.shape == (5,)
     inputs = torch.rand(3, model.config.observation_features)
     before = model.syn_gain.detach().clone()

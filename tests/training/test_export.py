@@ -4,16 +4,18 @@ import subprocess
 from pathlib import Path
 import numpy as np
 import torch
+import pytest
 from training.data import tiny_graph
 from training.export import export_model
 from training.features import FEATURE_COUNT
-from training.model import BrainPolicy
+from training.model import BrainPolicy, ModelConfig
 
 
-def test_browser_export_matches_python_sparse_model(tmp_path):
+@pytest.mark.parametrize('width', [118, 250, FEATURE_COUNT])
+def test_browser_export_matches_python_sparse_model(tmp_path, width):
     torch.manual_seed(7)
-    model = BrainPolicy(tiny_graph())
-    features = torch.rand(3, FEATURE_COUNT)
+    model = BrainPolicy(tiny_graph(), ModelConfig(observation_features=width))
+    features = torch.rand(3, width)
     masks = torch.tensor([[True]*7, [False, True, False, True, False, False, False], [True]*7])
     logits, values = model(features, masks)
     export_model(model, tmp_path)
@@ -57,7 +59,7 @@ def test_browser_public_features_and_seven_wagers_match_pokerkit(tmp_path):
     domain = (Path(__file__).parents[2]/'web/src/brain/domain.mjs').as_uri()
     script = f"""import fs from 'node:fs';import {{abstractActions,encodeObservation}} from '{domain}';
 const observations=JSON.parse(fs.readFileSync(process.argv[1]));
-console.log(JSON.stringify(observations.map(x=>({{features:Array.from(encodeObservation(x,undefined,'cards-history-v2')),actions:abstractActions(x)}}))));"""
+console.log(JSON.stringify(observations.map(x=>({{features:Array.from(encodeObservation(x,undefined,'cards-context-v3')),actions:abstractActions(x)}}))));"""
     actual = json.loads(subprocess.check_output([shutil.which('node'),'--input-type=module','-e',script,str(tmp_path/'observations.json')],text=True))
     for result,(features,actions) in zip(actual,expected,strict=True):
         assert np.allclose(result['features'],features,atol=1e-7)

@@ -34,7 +34,7 @@ def load_app(monkeypatch):
 def test_l4_workers_and_explicit_cpu_dispatch(monkeypatch):
     module = load_app(monkeypatch)
     calls = []
-    for name in ('smoke', 'pilot', 'smoke_gpu', 'pilot_gpu'):
+    for name in ('smoke', 'pilot', 'smoke_gpu', 'pilot_gpu', 'poker', 'poker_gpu'):
         worker = getattr(module, name)
         monkeypatch.setattr(worker, 'remote', lambda *args, selected=name: calls.append(selected) or {})
         assert worker.resources['max_containers'] == 1
@@ -44,4 +44,40 @@ def test_l4_workers_and_explicit_cpu_dispatch(monkeypatch):
     module.main(mode='smoke', accelerator='gpu')
     module.main(mode='train', accelerator='gpu')
     module.main(mode='train', accelerator='cpu')
-    assert calls == ['smoke_gpu', 'pilot_gpu', 'pilot']
+    module.main(mode='poker', accelerator='gpu')
+    module.main(mode='poker', accelerator='cpu')
+    assert calls == ['smoke_gpu', 'pilot_gpu', 'pilot', 'poker_gpu', 'poker']
+
+
+def test_control_dispatch_resources_and_caps(monkeypatch):
+    import pytest
+    module = load_app(monkeypatch)
+    calls = []
+    worker = module.controls_gpu
+    assert {key: worker.resources[key] for key in ('gpu','cpu','memory','max_containers','timeout','retries')} == {
+        'gpu':'L4','cpu':2,'memory':8192,'max_containers':1,'timeout':900,'retries':0}
+    monkeypatch.setattr(worker, 'remote', lambda *args: calls.append(args) or {})
+    module.main(mode='controls')
+    assert calls == [(31,64,90)]
+    module.main(mode='controls', seed=42, steps=100000, wall_seconds=120)
+    assert calls[-1] == (42,100000,120)
+    for controls in ({'steps':100001}, {'wall_seconds':121}, {'steps':-1}, {'wall_seconds':-1}):
+        with pytest.raises(ValueError):
+            module.main(mode='controls', **controls)
+    assert len(calls) == 2
+
+
+def test_control_evaluation_dispatch_and_resources(monkeypatch):
+    import pytest
+    module = load_app(monkeypatch)
+    calls = []
+    worker = module.control_evaluate_gpu
+    assert {key:worker.resources[key] for key in ('gpu','cpu','memory','timeout','max_containers','retries')} == {
+        'gpu':'L4','cpu':4,'memory':8192,'timeout':1200,'max_containers':1,'retries':0}
+    monkeypatch.setattr(worker,'remote',lambda *args: calls.append(args) or {})
+    module.main(mode='control-evaluate',eval_pairs=32)
+    assert calls == [(31,32,120)]
+    for controls in ({'wall_seconds':301},{'eval_pairs':10001},{'eval_pairs':0}):
+        with pytest.raises(ValueError):
+            module.main(mode='control-evaluate',**controls)
+    assert len(calls) == 1
