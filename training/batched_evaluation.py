@@ -238,3 +238,53 @@ def atomic_report(path, report):
 
 def evaluate_checkpoints(graph_path, candidate_path, starting_path, output, budget_seconds=600,
                          pairs=1000, seed=9182, device='cuda', previous_paths=(), domain='validation',
+                         batch_pairs=8, profiles=((400, 400), (80, 720), (200, 600)), samples=32,
+                         resume=False, commit=None):
+    if not np.isfinite(budget_seconds) or not 0 <= budget_seconds <= 900:
+        raise ValueError('evaluation budget must be finite and between zero and 900 seconds')
+    if not isinstance(pairs, int) or not 1 <= pairs <= 10000:
+        raise ValueError('paired deal count must be between one and 10000')
+    torch.set_num_threads(2)
+    graph = load_graph(Path(graph_path))
+    candidate, candidate_info = load_model(candidate_path, graph, device)
+    starting, starting_info = load_model(starting_path, graph, device)
+    opponents = dict.fromkeys(('random', 'passive', 'aggressive', 'equity', 'teacher'))
+    name = 'v2' if starting_info['metadata']['model']['observation_features'] == 118 else 'starting'
+    opponents[name] = starting
+    previous = []
+    for index, path in enumerate(previous_paths):
+        model, info = load_model(path, graph, device)
+        name = 'v2' if info['metadata']['model']['observation_features'] == 118 else f'previous_{index}'
+        if name in opponents:
+            raise ValueError('duplicate previous opponent')
+        opponents[name] = model
+        previous.append(info)
+    config = TournamentConfig(pairs=pairs, seed=seed, domain=domain,
+                              stack_profiles=tuple(tuple(profile) for profile in profiles))
+    sources = {name: hashlib.sha256(Path(__file__).with_name(name + '.py').read_bytes()).hexdigest()
+               for name in ('batched_evaluation', 'teacher', 'environment', 'features', 'model',
+                            'rollout', 'tournament', 'sparse', 'checkpoint', 'data')}
+    artifacts = {'candidate': candidate_info, 'starting': starting_info,
+                 'previous': previous, 'graph_sha256': graph.sha256, 'source_sha256': sources,
+                 'runtime': {'torch': str(torch.__version__), 'numpy': np.__version__,
+                             'device': str(device), 'cuda': torch.version.cuda}}
+    expected = {'config': asdict(config), 'artifacts': artifacts,
+                'baseline_samples': samples, 'inference_batch_pairs': batch_pairs}
+    output = Path(output)
+    prior = json.loads(output.read_text(encoding='utf-8')) if resume and output.exists() else None
+    if prior is not None:
+        validate_resume(prior, expected)
+    budget = Budget(budget_seconds)
+    previous_elapsed = prior.get('cumulative_elapsed_seconds', prior.get('elapsed_seconds', 0)) if prior else 0
+    def persist(report):
+        report['artifacts'] = artifacts
+        report['elapsed_seconds'] = budget.elapsed
+        report['cumulative_elapsed_seconds'] = previous_elapsed + budget.elapsed
+        report['promotion'] = promotion(report, parity=False)
+        atomic_report(output, report)
+        if commit:
+            commit()
+    report = evaluate_models(candidate, starting, budget, config, batch_pairs=batch_pairs,
+                             opponents=opponents, samples=samples, prior=prior, checkpoint=persist)
+    persist(report)
+    return report
