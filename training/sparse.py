@@ -15,8 +15,10 @@ class SparseMultiply(torch.autograd.Function):
         size = (state.shape[0], state.shape[0])
         transpose = torch.sparse_csr_tensor(transptr, transindices, weights[permutation], size=size)
         state_gradient = torch.sparse.mm(transpose, gradient)
-        pattern = torch.sparse_csr_tensor(indptr, indices, torch.zeros_like(weights), size=size)
-        weight_gradient = torch.sparse.sampled_addmm(pattern, gradient, state.T, beta=0).values()
+        weight_gradient = None
+        if ctx.needs_input_grad[0]:
+            pattern = torch.sparse_csr_tensor(indptr, indices, torch.zeros_like(weights), size=size)
+            weight_gradient = torch.sparse.sampled_addmm(pattern, gradient, state.T, beta=0).values()
         return weight_gradient, state_gradient, None, None, None, None, None
 
 
