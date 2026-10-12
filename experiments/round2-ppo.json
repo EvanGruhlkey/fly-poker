@@ -1,0 +1,1 @@
+{"run_name":"brain-v4-ppo-seed-31","seed":31,"warm_steps":32,"updates":512,"batch":16,"eval_pairs":0,"adapter_steps":32,"ppo_epochs":2,"league_interval":32,"league_capacity":3,"learning_rate":0.0001,"init_from_v2":"/artifacts/runs/brain-v2-seed-17/latest.pt"}
