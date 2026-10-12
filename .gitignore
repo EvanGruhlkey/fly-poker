@@ -21,3 +21,8 @@ runs/
 .env.*
 .modal.toml
 web/public/brain/*.bin
+
+sites/
+.openai/
+experiments/*.log
+todo.md
