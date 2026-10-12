@@ -1,0 +1,29 @@
+ts	phase	decision	why	evidence	result
+2026-10-11	baseline	Preserve existing uncommitted teacher and poker-fit changes	The checkout contains prior work	training/poker_fit.py	open
+2026-10-11	baseline	Run tests before edits	Establish the pre-change state	tests/	76 Python and 42 browser tests passed
+2026-10-11	design	Append versioned context features and use terminal Monte Carlo PPO	Preserve legacy inference and avoid unneeded nonterminal bootstraps	training/features.py; training/rollout.py	open
+2026-10-11	observations	Use 267 features with output-preserving migration	Expose exact legal sizes without changing the FlyWire path	tests/training/test_history.py; tests/training/test_export.py	VERIFIED
+2026-10-11	teacher	Reject exploratory teacher as unproven	Confidence intervals include losses	experiments/teacher-baseline.json; experiments/teacher-conservative.json	INCONCLUSIVE
+2026-10-11	teacher	Keep rollout supervision gated	180-second validation is incomplete and equal-stack interval includes zero	experiments/teacher-validation.json	NOT VERIFIED
+2026-10-11	training	Align imitation values with terminal net returns	Blinds and earlier chip investment must be counted once	tests/training/test_teacher_return.py	VERIFIED
+2026-10-11	resume	Roll interrupted updates back to completed checkpoint	PPO can hit its time budget after partial optimizer steps	tests/training/test_train.py	VERIFIED
+2026-10-11	league	Persist historical frozen snapshots	A continuously refreshed sole opponent provides insufficient diversity	tests/training/test_league.py	VERIFIED
+2026-10-11	compute	Run one-step full-graph L4 smoke	Measure real execution before a bounded pilot	experiments/l4-v4-smoke.json	VERIFIED
+2026-10-11	compute	Run only a 60-second capped pilot	Remaining credits and hard spend limit are not available from CLI	experiments/brain-v4-pilot.json	24.337 seconds; 16 training hands
+2026-10-11	evaluation	Reject production promotion	Small held-out evaluation shows losses to equity and no supported relative improvement	experiments/v4-heldout-debug.json	NOT VERIFIED
+2026-10-11	research	Keep compact NFSP separate from Holdem production	Exact Kuhn improvement does not establish Holdem strength	experiments/kuhn-nfsp-pilot.json	Exploitability 0.4334 to 0.1927
+2026-10-11	review	Replace sign-only seed split with magnitude domains	Python integer RNG seeds ignore sign	tests/training/test_dataset.py	VERIFIED; dataset schema v2
+2026-10-11	review	Pin dataset checksums and teacher sample counts	Paths and source hashes alone do not identify stochastic supervision	training/train.py	VERIFIED by code review; tests pending
+2026-10-11	scope	Leave controls and longer training open	Teacher gate failed and account budget information is missing	docs/poker-strength-audit.md	Holdem objective unmet
+2026-10-11	verification	Run final Python and browser checks	Verify actual encoders, training, resume and production build after review fixes	tests/; web/src/	106 Python tests; 42 browser tests; build and diff checks passed
+2026-10-11	review	Verify replaced datasets cannot resume silently	A changed file at the same path changes the experiment	tests/training/test_train.py	VERIFIED
+2026-10-11	budget	Continue bounded experiments with reported $28 credits	User authorized further compute; first comparison round capped near $3 estimated	User message; experiments/round2-*.json	AUTHORIZED
+2026-10-11	teacher	Use heuristic choices for baseline imitation	Old always-call EV targets assign 46 percent mean mass to all-in on a 64-state diagnostic	training/teacher.py; tests/training/test_heuristic_targets.py	VERIFIED
+2026-10-11	experiment	Compare low-imitation PPO with cached staged imitation	Avoid scaling a weak label objective without heldout comparison	experiments/round2-ppo.json; experiments/round2-imitation.json	RUNNING
+2026-10-11	fix	Clamp weighted probabilities after floating reduction	GPU scoring reproduced certain-win equity 1.0000000000000002 causing invalid square root	training/teacher.py; tests/training/test_teacher.py	Failing regression reproduced then passed; rerun scoring
+2026-10-11	evaluation	Persist completed paired chunks and resume pinned artifacts	Final panels exceed a single bounded worker and must not mix versions	training/batched_evaluation.py	VERIFIED exact continuation test
+2026-10-11	coverage	Balance street and pressure strata before more training	75 percent of natural states require no call; teacher folds when pressure appears	experiments/dataset_census.py; training/dataset.py	Quota and budget tests passed; pressure train4092 and validation504 cached
+2026-10-11	performance	Throttle remote checkpoint synchronization to60seconds	512 cached steps compute16.53seconds but total305seconds; frequent Volume commits dominate overhead	training/train.py; tests/training/test_train.py	Failing commit-count regression reproduced then passed; local rollback preserved
+2026-10-11	experiment	Train pressure-balanced candidate and score retrained controls	Two capped independent GPU jobs share an aggregate estimated3USDceiling	experiments/round2-pressure.json; experiments/round2-budget.json	RUNNING
+2026-10-11	experiment	Finish matched pressure imitation and PPO scoring	Both complete all 18 panels; PPO significantly regresses against equity at equal stacks; no promotion	docs/round2-results.md; experiments/round2-budget.json	COMPLETE; strength objective unmet
+2026-10-11	verification	Verify infrastructure and review checkpoint changes	130 Python tests, 42 browser tests, build and diff checks pass; independent read-only review has no further findings	training/train.py; tests/training/test_train.py	VERIFIED

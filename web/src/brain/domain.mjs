@@ -20,7 +20,9 @@ export function abstractActions(view) {
   return actions;
 }
 export function encodeObservation(view,actions=abstractActions(view),version='cards-public-v1') {
-  const features=new Float32Array(version==='cards-history-v2'?250:118);
+  const count={'cards-public-v1':118,'cards-history-v2':250,'cards-context-v3':267}[version];
+  if(!count)throw new Error('Unsupported observation version');
+  const features=new Float32Array(count);
   const cardIndex=card=>'23456789TJQKA'.indexOf(card[0])*4+'cdhs'.indexOf(card[1].toLowerCase());
   view.holeCards.forEach(card=>{features[cardIndex(card)]=1;});
   view.board.forEach(card=>{features[52+cardIndex(card)]=1;});
@@ -29,10 +31,17 @@ export function encodeObservation(view,actions=abstractActions(view),version='ca
   features.set([Number(view.dealer),view.pot/800,view.legal.call/400,view.stack/400,
     view.opponentStack/400,view.committed/400,view.opponentCommitted/400,view.board.length/5,
     raises.length?Math.min(...raises)/400:0,raises.length?Math.max(...raises)/400:0],108);
-  if(version==='cards-history-v2') (view.publicActions??[]).slice(-12).forEach((event,index)=>{
+  if(count>=250) (view.publicActions??[]).slice(-12).forEach((event,index)=>{
     const offset=118+index*11;
     features[offset+(event.actor==='fly'?0:1)]=1;features[offset+2+event.street]=1;
     features[offset+6+['fold','check','call','raise'].indexOf(event.kind)]=1;features[offset+10]=event.paid/800;
   });
+  if(count===267) {
+    const effective=Math.min(view.stack,view.opponentStack);
+    features.set([effective/400,effective/Math.max(1,effective+view.pot),
+      view.legal.call/Math.max(1,view.pot+view.legal.call)],250);
+    features.set(actions.map(action=>action?.kind==='raise'?action.to/400:action?.kind==='call'?view.legal.call/400:0),253);
+    features.set(actions.map(action=>Number(action!==null)),260);
+  }
   return features;
 }

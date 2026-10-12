@@ -5,13 +5,14 @@ const object = value => value !== null && typeof value === 'object' && !Array.is
 export function parseModel(manifest, buffer) {
   const featureCount=manifest?.model?.observation_features;
   const compatible=manifest?.format==='fly-poker-brain-v2' && manifest.observation_version==='cards-public-v1' && featureCount===118 ||
-    manifest?.format==='fly-poker-brain-v3' && manifest.observation_version==='cards-history-v2' && featureCount===250;
+    manifest?.format==='fly-poker-brain-v3' && manifest.observation_version==='cards-history-v2' && featureCount===250 ||
+    manifest?.format==='fly-poker-brain-v4' && manifest.observation_version==='cards-context-v3' && featureCount===267;
   if (!object(manifest) || !compatible || manifest.action_version !== 'holdem-seven-v1' ||
       !object(manifest.model) || manifest.model.approximation !== 'signed-learned-saturating-rate-v2' ||
       !object(manifest.tensors) || manifest.bytes !== buffer.byteLength) fail('Incompatible brain export');
   const {neurons:n, connections:e, inputs:ni, outputs:no} = manifest;
   if (![n,e,ni,no].every(integer) || !n || !e || !ni || !no || n > 200000 || e > 4000000 ||
-      ni > n || no > n || manifest.model.steps !== 8 || ![118,250].includes(featureCount) ||
+      ni > n || no > n || manifest.model.steps !== 8 || ![118,250,267].includes(featureCount) ||
       manifest.model.action_count !== 7 || !(manifest.model.saturation > 0) ||
       manifest.layer_norm_epsilon !== 1e-5) fail('Invalid brain dimensions');
   const shapes = {csr_indptr:[n+1],csr_indices:[e],input_idx:[ni],output_idx:[no],signs:[e],

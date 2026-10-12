@@ -12,16 +12,27 @@ self.onmessage=async(event:MessageEvent<BrainRequest>)=>{
    if(!response.ok)throw new Error('Trained brain manifest is unavailable. Install the released model assets and retry.');
    const manifest:unknown=await response.json();
    if(!manifest||typeof manifest!=='object'||!('sha256' in manifest)||typeof manifest.sha256!=='string')throw new Error('Invalid brain manifest');
-   const binaryUrl=new URL('model.bin',new URL(request.manifestUrl,self.location.href));binaryUrl.searchParams.set('sha256',manifest.sha256);
-   const binaryResponse=await fetch(binaryUrl,{cache:'force-cache'});
-   if(!binaryResponse.ok)throw new Error('Trained brain weights are unavailable.');
-   const buffer=await binaryResponse.arrayBuffer();
+   const parts='binary_parts' in manifest?manifest.binary_parts:['model.bin'];
+   if(!Array.isArray(parts)||parts.length<1||parts.length>8||
+      !parts.every((part:unknown)=>typeof part==='string'&&/^model(?:-\d+)?\.bin$/.test(part)))throw new Error('Invalid brain weight parts');
+   const chunks:Uint8Array[]=[];
+   for(const part of parts){
+    const binaryUrl=new URL(part,new URL(request.manifestUrl,self.location.href));binaryUrl.searchParams.set('sha256',manifest.sha256);
+    const binaryResponse=await fetch(binaryUrl,{cache:'force-cache'});
+    if(!binaryResponse.ok)throw new Error('Trained brain weights are unavailable.');
+    chunks.push(new Uint8Array(await binaryResponse.arrayBuffer()));
+   }
+   const joined=new Uint8Array(chunks.reduce((total,chunk)=>total+chunk.length,0));
+   let offset=0;for(const chunk of chunks){joined.set(chunk,offset);offset+=chunk.length;}
+   const buffer=joined.buffer;
    const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',buffer)),x=>x.toString(16).padStart(2,'0')).join('');
    if(hash!==manifest.sha256)throw new Error('Brain weights failed SHA-256 verification.');
    const loaded=parseModel(manifest,buffer);
    const m=loaded.manifest;
    if(m.graph_sha256!==graphHash||m.neurons!==134209||m.connections!==2700513||
-      !m.progress?.warm_steps||!m.progress?.updates||!Number.isInteger(m.training_config?.seed))throw new Error('This is not the trained full-connectome poker model.');
+      !Number.isInteger(m.progress?.warm_steps)||m.progress.warm_steps<0||
+      !Number.isInteger(m.progress?.updates)||m.progress.updates<0||
+      m.progress.warm_steps+m.progress.updates===0||!Number.isInteger(m.training_config?.seed))throw new Error('This is not the trained full-connectome poker model.');
    model=loaded;
    reply({kind:'ready',id:request.id,metadata:{observationVersion:m.observation_version,modelHash:hash,graphHash:m.graph_sha256,neurons:m.neurons,connections:m.connections,
     warmSteps:m.progress.warm_steps,updates:m.progress.updates,seed:m.training_config.seed}});
