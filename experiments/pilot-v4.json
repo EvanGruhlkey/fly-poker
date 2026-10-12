@@ -1,0 +1,1 @@
+{"run_name":"brain-v4-pilot-seed-23","seed":23,"warm_steps":8,"updates":4,"batch":4,"eval_pairs":4,"adapter_steps":8,"ppo_epochs":2,"league_interval":2,"league_capacity":2,"init_from_v2":"/artifacts/runs/brain-v2-seed-17/latest.pt"}
