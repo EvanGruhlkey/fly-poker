@@ -21,7 +21,7 @@ class BrainPolicy(nn.Module):
     def __init__(self, graph: Graph, config: ModelConfig = ModelConfig()):
         super().__init__()
         graph.validate()
-        if config.steps != 8 or config.observation_features not in (118, FEATURE_COUNT) or config.action_count != 7:
+        if config.steps != 8 or config.observation_features not in (118, 250, FEATURE_COUNT) or config.action_count != 7:
             raise ValueError('incompatible observation, action, or recurrence configuration')
         self.config = config
         self.graph_sha = graph.sha256

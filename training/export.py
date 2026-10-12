@@ -4,10 +4,10 @@ from pathlib import Path
 import numpy as np
 import torch
 from .environment import ACTION_VERSION
-from .features import OBSERVATION_VERSION
+from .features import FEATURE_COUNTS
 from .model import BrainPolicy
 
-EXPORT_VERSION = 'fly-poker-brain-v3'
+EXPORT_VERSION = 'fly-poker-brain-v4'
 
 
 def export_model(model: BrainPolicy, directory: Path, *, progress=None, config=None) -> dict:
@@ -35,8 +35,11 @@ def export_model(model: BrainPolicy, directory: Path, *, progress=None, config=N
         chunks.append(blob)
         offset += len(blob)
     data = b''.join(chunks)
-    manifest = {'format': EXPORT_VERSION, 'binary': 'model.bin', 'sha256': hashlib.sha256(data).hexdigest(),
-        'bytes': len(data), **model.metadata(), 'observation_version': OBSERVATION_VERSION,
+    observation_version = next(version for version, count in FEATURE_COUNTS.items()
+        if count == model.config.observation_features)
+    format_version = {118: 'fly-poker-brain-v2', 250: 'fly-poker-brain-v3', 267: EXPORT_VERSION}[model.config.observation_features]
+    manifest = {'format': format_version, 'binary': 'model.bin', 'sha256': hashlib.sha256(data).hexdigest(),
+        'bytes': len(data), **model.metadata(), 'observation_version': observation_version,
         'action_version': ACTION_VERSION, 'license': 'CC-BY-NC-4.0', 'layer_norm_epsilon': 1e-5,
         'progress': progress or {}, 'training_config': config or {}, 'tensors': descriptors}
     (directory / 'model.bin').write_bytes(data)
@@ -55,7 +58,7 @@ def export_checkpoint(graph_path: Path, checkpoint_path: Path, directory: Path):
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description='Export a validated v3 checkpoint for local browser inference')
+    parser = argparse.ArgumentParser(description='Export a validated v4 checkpoint for local browser inference')
     parser.add_argument('--graph', type=Path, required=True)
     parser.add_argument('--checkpoint', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)

@@ -35,6 +35,7 @@ class Observation:
     actions: tuple[tuple[str, int] | None, ...]
 
     history: tuple[PublicAction, ...] = ()
+    starting_stack: int = 400
 
     @property
     def mask(self) -> tuple[bool, ...]:
@@ -126,7 +127,8 @@ class Holdem:
             tuple(repr(cards[0]) for cards in state.board_cards), state.street_index,
             self.actor == self.dealer, self.pot, state.checking_or_calling_amount,
             state.stacks[actor], state.stacks[1 - actor], state.bets[actor], state.bets[1 - actor], self.actions(),
-            tuple(PublicAction(seat == self.actor, street, kind, paid) for seat, street, kind, paid in self._history[-12:]))
+            tuple(PublicAction(seat == self.actor, street, kind, paid) for seat, street, kind, paid in self._history[-12:]),
+            self._starting_stacks[self.actor])
 
     def step(self, index: int):
         actions = self.actions()
