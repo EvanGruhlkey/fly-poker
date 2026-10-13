@@ -4,9 +4,14 @@ export interface BrainMetadata {
 }
 export type BrainStatus={readonly kind:'loading'}|{readonly kind:'ready';readonly metadata:BrainMetadata}|{readonly kind:'error';readonly message:string};
 export type BrainRequest={readonly kind:'load';readonly id:number;readonly manifestUrl:string}|{readonly kind:'infer';readonly id:number;readonly features:Float32Array;readonly mask:readonly boolean[]};
-export type BrainResponse={readonly kind:'ready';readonly id:number;readonly metadata:BrainMetadata}|{readonly kind:'result';readonly id:number;readonly index:number;readonly value:number;readonly inferenceMs:number}|{readonly kind:'error';readonly id:number;readonly message:string};
+export interface BrainActivity {readonly kind:'activity';readonly id:number;readonly step:number;readonly ids:Int32Array;readonly rates:Float32Array}
+export type BrainResponse=BrainActivity|{readonly kind:'ready';readonly id:number;readonly metadata:BrainMetadata}|{readonly kind:'result';readonly id:number;readonly index:number;readonly value:number;readonly inferenceMs:number}|{readonly kind:'error';readonly id:number;readonly message:string};
 export function parseResponse(value:unknown):BrainResponse {
  if(!value||typeof value!=='object'||!('kind' in value)||!('id' in value)||typeof value.id!=='number')throw new Error('Invalid brain worker reply');
+ if(value.kind==='activity'&&'step' in value&&typeof value.step==='number'&&Number.isInteger(value.step)&&value.step>=0&&value.step<8&&
+  'ids' in value&&value.ids instanceof Int32Array&&value.ids.length===134209&&value.ids.every((id,i)=>id===i)&&
+  'rates' in value&&value.rates instanceof Float32Array&&value.rates.length===value.ids.length&&value.rates.every(x=>Number.isFinite(x)&&x>=0))
+   return {kind:'activity',id:value.id,step:value.step,ids:value.ids,rates:value.rates};
  if(value.kind==='error'&&'message' in value&&typeof value.message==='string')return {kind:'error',id:value.id,message:value.message};
  if(value.kind==='result'&&'index' in value&&'value' in value&&'inferenceMs' in value&&
   typeof value.index==='number'&&Number.isInteger(value.index)&&value.index>=0&&value.index<7&&

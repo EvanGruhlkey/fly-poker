@@ -1,3 +1,4 @@
+import { ConnectomePanel } from './ui/ConnectomePanel';
 import { startHand,play,nextHand,legalActions } from './game/poker';
 import { observeBrain } from './brain/observation';
 import { NeuralOpponent } from './brain/NeuralOpponent';
@@ -9,13 +10,14 @@ import { pokerMarkup } from './ui/pokerHud';
 import { tableFor,statusFor,moveChips,type Presentation } from './ui/pokerView';
 export function createAppTitle():string{return 'Poker vs. a Fruit Fly';}
 export function mountApp(root:HTMLElement):()=>void{
+ const connectome=new ConnectomePanel();
  const brain=new NeuralOpponent();let brainStatus:BrainStatus={kind:'loading'};let loadGeneration=0;let inferences=0;let inferenceMs=0;
  let initial=startHand();let state:PokerState=initial.state;let scene:CasinoScene|undefined;let host:HTMLElement|undefined;
  let display:Presentation={table:tableFor(state),opponentCards:[],winningCards:[],animation:'none',dealingCards:state.holes.player,winner:'none',message:'Posting blinds…',busy:true};
  let raise=8;let generation=0;let timer:number|undefined;let resolveWait:((valid:boolean)=>void)|undefined;
  const reduced=()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const wait=(ms:number,ticket:number)=>new Promise<boolean>(resolve=>{resolveWait=resolve;timer=window.setTimeout(()=>{resolveWait=undefined;timer=undefined;resolve(ticket===generation);},reduced()?0:ms);});
- const cancel=()=>{generation++;if(timer!==undefined)window.clearTimeout(timer);timer=undefined;resolveWait?.(false);resolveWait=undefined;scene?.cancelAnimation();};
+ const cancel=()=>{connectome.reset();generation++;if(timer!==undefined)window.clearTimeout(timer);timer=undefined;resolveWait?.(false);resolveWait=undefined;scene?.cancelAnimation();};
  const render=()=>{
   host?.remove();root.innerHTML=pokerMarkup(state,display,brainStatus,{inferences,inferenceMs});
   const placeholder=root.querySelector<HTMLElement>('[data-scene]');if(!placeholder)throw new Error('Casino scene host is missing');
@@ -27,6 +29,8 @@ export function mountApp(root:HTMLElement):()=>void{
   root.querySelectorAll<HTMLElement>('[data-action]').forEach(button=>button.addEventListener('click',()=>{
    const action=button.dataset.action;if(action==='fold'||action==='call'||action==='raise'||action==='all-in')void humanAction(action);
   }));
+  const connectomeButton=root.querySelector<HTMLButtonElement>('[data-connectome]');
+  if(connectomeButton){connectomeButton.setAttribute('aria-expanded',String(connectome.isOpen));connectomeButton.addEventListener('click',()=>connectome.toggle(connectomeButton));}
   root.querySelector('[data-reset]')?.addEventListener('click',()=>{cancel();void begin(startHand(),{player:400,fly:400});});
   root.querySelector('[data-next]')?.addEventListener('click',()=>{
    if(display.busy||state.kind!=='complete')return;cancel();
@@ -74,13 +78,16 @@ export function mountApp(root:HTMLElement):()=>void{
  const flyTurns=async(ticket:number)=>{
   while(ticket===generation&&state.kind==='betting'&&state.turn==='fly'){
    display={...display,busy:true,message:brainStatus.kind==='loading'?'Loading the trained fly brain…':'The neural fly is thinking…'};render();
+   brain.onActivity=activity=>{if(ticket===generation)connectome.receive(activity);};connectome.thinking();
    try{
     const result=await brain.choose(observeBrain(state));
     if(ticket!==generation)return;
+    connectome.finished();
     inferences++;inferenceMs=result.inferenceMs;
     if(!await execute(play(state,result.action),ticket))return;
    }catch(error){
     if(ticket!==generation)return;
+    connectome.finished();
     brainStatus={kind:'error',message:error instanceof Error?error.message:'Brain inference failed.'};
     display={...display,busy:true,message:'Trained brain unavailable. Retry loading to continue.'};render();return;
    }
@@ -107,6 +114,6 @@ export function mountApp(root:HTMLElement):()=>void{
   if(action==='fold'||action==='call'||action==='raise'||action==='all-in'){event.preventDefault();void humanAction(action);}
  };
  void loadBrain();void begin(initial,{player:400,fly:400});window.addEventListener('keydown',keyboard);
- return()=>{loadGeneration++;brain.destroy();cancel();window.removeEventListener('keydown',keyboard);scene?.destroy();};
+ return()=>{connectome.destroy();loadGeneration++;brain.destroy();cancel();window.removeEventListener('keydown',keyboard);scene?.destroy();};
 }
 

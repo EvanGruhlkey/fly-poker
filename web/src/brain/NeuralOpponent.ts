@@ -3,6 +3,7 @@ import {brainInput,type BrainObservation} from './observation';
 import {parseResponse,type BrainResponse,type BrainRequest,type BrainMetadata} from './protocol';
 interface Pending {readonly resolve:(response:BrainResponse)=>void;readonly reject:(error:Error)=>void;readonly timeout:ReturnType<typeof setTimeout>}
 export class NeuralOpponent {
+ onActivity:((activity:import('./protocol').BrainActivity)=>void)|undefined;
  private worker:Worker|undefined;
  private serial=0;
  private pending=new Map<number,Pending>();
@@ -18,6 +19,7 @@ export class NeuralOpponent {
   this.worker=new Worker(new URL('./worker.ts',import.meta.url),{type:'module'});
   this.worker.onmessage=(event:MessageEvent<unknown>)=>{
    try{const response=parseResponse(event.data);const pending=this.pending.get(response.id);if(!pending)return;
+    if(response.kind==='activity'){if(response.id===this.serial)this.onActivity?.(response);return;}
     clearTimeout(pending.timeout);this.pending.delete(response.id);
     if(response.kind==='error')pending.reject(new Error(response.message));else pending.resolve(response);
    }catch(error){this.fail(error instanceof Error?error:new Error('Invalid brain worker reply'));}

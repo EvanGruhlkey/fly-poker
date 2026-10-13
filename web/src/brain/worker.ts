@@ -1,3 +1,4 @@
+
 import {sampleAction} from './sampling.mjs';
 import {parseModel,forward,type LoadedModel} from './runtime.mjs';
 import type {BrainRequest,BrainResponse} from './protocol';
@@ -38,7 +39,10 @@ self.onmessage=async(event:MessageEvent<BrainRequest>)=>{
     warmSteps:m.progress.warm_steps,updates:m.progress.updates,seed:m.training_config.seed}});
   }else{
    if(!model)throw new Error('Trained brain is not loaded.');
-   const start=performance.now();const result=forward(model,request.features,request.mask);
+   const start=performance.now();const ids=Int32Array.from({length:model.manifest.neurons},(_,i)=>i);
+   const result=forward(model,request.features,request.mask,(rates,step)=>{
+    reply({kind:'activity',id:request.id,step,ids,rates:rates.slice()});
+   });
    const index=sampleAction(result.logits);
    reply({kind:'result',id:request.id,index,value:result.value,inferenceMs:performance.now()-start});
   }

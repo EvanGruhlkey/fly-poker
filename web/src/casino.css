@@ -118,3 +118,7 @@ html,body,#app{width:100%;height:100%;overflow:hidden}
 .wager strong{margin-left:5px;font-weight:600;color:#fff}
 .fly-wager{top:39.8%}.player-wager{top:61%;left:78%}
 @media(max-width:700px){.wager{left:65%;font-size:10px}.fly-wager{top:40%}.player-wager{top:62%;left:78%}}
+.connectome-panel{position:fixed;z-index:50;right:20px;top:85px;width:min(520px,calc(100vw - 40px));background:#101611;border:1px solid #555343;border-radius:16px;box-shadow:0 20px 60px #000b;padding:18px;color:#e9e7d7}.connectome-panel[hidden]{display:none}.connectome-heading{display:flex;align-items:center;justify-content:space-between}.connectome-heading h2{font-size:19px;margin:0}.connectome-panel canvas{display:block;width:100%;height:auto;margin-top:14px;border-radius:10px}.connectome-panel p{font-size:13px;line-height:1.5;margin:12px 0 0}.connectome-panel .connectome-note{font-size:11px;color:#a9ab9b}.header-right{flex-wrap:wrap}
+.connectome-legend{display:flex;gap:16px;font-size:11px;margin:10px 0}.connectome-replay{display:flex;gap:14px;align-items:center;margin-top:12px}.connectome-replay input{min-width:0;flex:1;accent-color:#8be05a}
+.connectome-panel{padding:0;overflow:hidden;border:0;background:#080e0c;border-radius:12px}.connectome-panel canvas{margin:0;border-radius:12px}
+.connectome-panel canvas{touch-action:none;cursor:grab}.connectome-panel canvas:active{cursor:grabbing}

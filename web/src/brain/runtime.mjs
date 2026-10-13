@@ -53,7 +53,7 @@ function linear(weights, bias, input) {
   return output;
 }
 
-export function forward(model, features, mask) {
+export function forward(model, features, mask, onStep) {
   if (features.length!==model.manifest.model.observation_features || !features.every(Number.isFinite) || mask.length!==7 ||
       !mask.every(x=>typeof x==='boolean') || !mask.some(Boolean)) fail('Invalid private observation');
   const {arrays:a, manifest:m} = model;
@@ -73,6 +73,7 @@ export function forward(model, features, mask) {
       next[neuron]=Math.fround(Math.fround((1-leak)*rates[neuron])+Math.fround(leak*activation));
     }
     [rates,next]=[next,rates];
+    onStep?.(rates,step);
   }
   const motor=new Float32Array(m.outputs);
   a.output_idx.forEach((neuron,i)=>{motor[i]=rates[neuron];});

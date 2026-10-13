@@ -4,4 +4,4 @@ export interface LoadedModel {
  readonly arrays:Readonly<Record<string,Float32Array|Int32Array>>;
 }
 export function parseModel(manifest:unknown,buffer:ArrayBuffer):LoadedModel;
-export function forward(model:LoadedModel,features:readonly number[]|Float32Array,mask:readonly boolean[]):{logits:number[];value:number};
+export function forward(model:LoadedModel,features:readonly number[]|Float32Array,mask:readonly boolean[],onStep?:(rates:Float32Array,step:number)=>void):{logits:number[];value:number};
